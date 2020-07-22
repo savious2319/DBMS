@@ -1,0 +1,576 @@
+day02 
+
+[내일] 테이블과 관련된 명령어 연습
+	- 테이블 생성, 수정, 삭제
+
+어제
+* 환경구축
+* sql
+  - 정의 : DDL
+		: create, alter, drop, truncate
+  - 조작 : DML
+		: select, insert, delete, update
+  - 제어 : DCL
+		: grant, revoke, commit, rollback, savepoint
+
+* 간단한 명령어
+  (콘솔) show, sqlplus, conn, desc, set
+
+* sql
+	scott 계정에서...
+	테이블 목록을 보고싶다.
+
+	select * from tab;
+		(emp, ..., ...)
+
+
+	select * from emp;
+		emp가 갖고 있는 테이블의 컬럼, 컬럼에 있는 데이터를 보여주세요
+	enum  ename  department  salary
+        7655  홍길동   10          2500
+	7651  박문수   30          2500
+	7652  이순신   20          2500
+
+
+	select 내가 보고 싶은 컬럼명,
+	       내가 보고 싶은 컬럼명,
+	       내가 보고 싶은 컬럼명 
+	from   대상 테이블;
+
+	select ename, salary from emp; (특정 컬럼을 볼 수 있다)
+
+===============================================================================
+* 테이블 (생성하기, 모델링하기)
+
+	select, delete, update, insert 를 하기 위해선
+	테이블이 있어야 한다!!
+
+	1. 테이블을 만들 수 있는 명령어를 배워보자!
+		1) 기본 문법
+		2) 제약조건
+		3) 무결성
+		
+
+	테이블 - 테이블간의 관계를 설정할 수 있어야 한다.
+		1) 테이블을 어떻게 설계할 것인가?
+		2) 모델링(개념, 논리, 물리적 설계)
+----------------------------------------------------------------
+1. 테이블 관련된 sql 명령어 (쿼리문)
+
+1) create : 테이블 생성
+	create table 테이블명
+	(
+		컬럼명  타입,
+		컬럼명  타입,
+		컬럼명  타입
+	);
+
+2) drop : 테이블 삭제
+	drop table 삭제하고 싶은 테이블명;
+
+3) alter : 테이블 수정 
+	alter table 테이블명 후행 조건들;
+	
+	후행조건)
+	(1) 테이블 수정 : rename to 새롭게 바꾸고 싶은 테이블명;
+	(2) 컬럼 추가 : add 새로운 컬럼명 컬럼타입;
+	(3) 컬럼명 변경 : rename column 기존컬럼명 to 바꾸고싶은 컬럼;
+	(4) 컬럼 삭제 : drop column 삭제하고 싶은 컬럼명;
+
+4) truncate : 테이블의 "데이터"만 삭제
+
+	truncate table 데이터를 날리고 싶은 테이블 명;
+
+	truncate로 삭제한 데이터는 되살릴 수 없다(rollback 해도 안살아남)
+	무조건 테이블의 "데이터"가 전체 삭제된다.
+	(table의 초기상태로 돌림)
+	delete 명령보다 더 빠르게 수행됨, 따라서 대용량 데이터를 지울 때 유리하다!
+-------------------------------------------------------------------------
+테이블 만들기 위해 필요한 자료형 몇가지!!!
+
+1. 자료형 (TYPE)
+숫자	NUMBER : 고정형, 최대 40자리까지 숫자를 기재할 수 있다.
+		 
+		 PRICE  NUMBER
+
+	NUMBER(자릿수)	PRICE NUMBER(5) 만단위까지 입력할 수 있음
+		W	W는 최대 38자리까지 사용자가 지정할 수 있다.
+
+	NUMBER(자릿수, 소수점자리수) : W는 전체자리, D는 소수점 이하 자릿수
+		W,     D
+
+
+	오라클에서 NUMBER라는 자료형은 자바에서는...
+			byte, short, int, long
+			float, double
+
+		만약 자릿값을 입력하지 않을 때는, BigDecimal 과 매핑된다.
+
+
+문자	CHAR(길이) : 고정형, 길이는 1byte
+		GENDER CHAR(2)
+
+		만약 GENDER CHAR(20)
+		실제 데이터가 '남자' 나머지 18자리는 공백으로 유지된다.
+
+	VARCHAR  <--- 존재만 하고 실제로는 사용하지 않는 예비 자료형(X)
+	VARCHAR2 : 가변형, 실제 들어가는 데이터 크기로 자동으로 맞춰진다.
+		   최대크기는 (2000BYTE)까지
+		   CONTENT VARCHAR2(1000)
+   
+	자바에서 String에 해당한다. 마치 VARCHAR2는 자바에서의 trim()과 같다 
+
+
+날짜	DATE : 날짜 형식(format)에 맞춰서 날짜를 저장하는 타입
+	TIMESTAMP : DATE 타입의 확장형
+
+		DATE : 밀리초까지만 저장
+		TIMESTAMP : 나노초까지도 저장가능
+	날짜를 출력할 때, 문자로 저장해서 출력하는 경우가 많다
+	그런데, 날짜를 연산해야 할때, 그때는 DATE타입을 사용하면 편리하게 연산할 수 있다.
+
+	자바 연동
+		java.util.Date : 초단위까지 저장할 때, 연동한다.
+		java.sql.Date : 날짜까지만 저장한다.
+
+
+ [정리] number(w)
+       char(w)
+       varchar2(w)
+       date
+       timestamp
+
+
+2. 테이블 만들어 보기
+   1) (제약조건이 없는) 테이블 만들어보기
+   2) 제약조건을 갖춘 테이블 만들기
+   3) 서브퀴리형태로 테이블 만들기(select문 배운 후 시행해 본다)
+
+
+3. (제약조건 없는) 테이블 생성
+
+   sql> 
+	CREATE TABLE 테이블명(
+		컬럼명 타입,
+		컬럼명 타입,
+		컬럼명 타입
+	);
+
+4. 제약조건이 있는 테이블
+	제약조건 : CONSTRAINT <-- 컬럼에 데이터를 넣게 되는데...
+				조건을 걸어서 데이터 입력시 필터링을 하자
+		예) ID VARCHAR2(15)	ID는 중복 되는 데이터가 있으면 안됨 (유일값)
+					ID는 비어있으면 안됨 (not null)
+					
+	제약조건 종류
+		primary key (기본키) : not null + unique가 합쳐진거라고 보면 됨
+		not null (공백이 있으면 안됨)
+		unique (여기에 들어올 값은 중복되면 안됩니다)
+		...
+					
+
+   sql>
+	CREATE TABLE 테이블명(
+		컬럼명 타입 제약조건,
+		컬럼명 타입 제약조건,	
+		컬럼명 타입
+
+	);
+	
+	또는
+
+	CREATE TABLE 테이블명(
+		컬럼명 타입,
+		컬럼명 타입,	
+		컬럼명 타입,
+		CONSTRAINT [제약조건을 구분하기 위한 이름을 지어주자][제약조건 키](컬럼명)
+		--예약어 CONSTRAINT 필요
+		--내가 붙일 제약조건의 이름
+		--제약조건 키 종류 나열
+		--어떤 컬럼에 걸건지 소괄호에 컬럼명 작성
+	);
+
+
+	디비버 : 폴더에서 바로바로 확인 가능하다!
+
+
+ *콘솔에서 명령어
+SQL> desc user_constraints
+
+--scott이 갖고 있는 제약조건 키를 확인해 보자
+select 컬럼명, 컬럼명 from 테이블;
+
+
+SQL>
+
+select 
+	constraint_name, constraint_type, table_name 
+from 
+	user_constraints;
+
+팁) alias 컬럼에 또다른 별칭을 붙여서 사용할 수 있다.
+
+select 
+	constraint_name 제약조건이름,
+	constraint_type 제약조건타입, 
+	table_name 테이블이름 
+from 
+	user_constraints;
+
+CONSTRAINT_NAME                                              CO TABLE_NAME
+------------------------------------------------------------ -- -----------
+PK_DEPT                                                      P  DEPT
+PK_EMP                                                       P  EMP
+FK_DEPTNO                                                    R  EMP
+
+
+	타입 : P- primary key
+	      R - 참조키( 두 테이블간의 관계가 맺어질 때 사용하는 키)
+	      U - unique
+	      C - NOT NULL
+
+
+5. 서브쿼리 형태로 테이블을 만들 수 있습니다.
+	서브쿼리 : sql 절 안에 또다른 sql을 포함하고 있다.
+		select.. from ... (select ....) ;
+
+	create table 테이블이름 as select ... from 테이블명 where(조건절);
+	 ↑                       ↑
+	메인퀴리                  서브퀴리
+
+[정리]
+	1. 일반적인 테이블
+	2. 제약조건
+	3. 서브퀴리
+	테이블을 생성한다.
+
+
+sql> 실습 dbeaver에서... scott 계정으로 sql_day02.sql 에서..
+
+	테이블 요구사항 TEST01
+
+	컬럼명    타입
+	학번     숫자
+	이름     가변문자형(5)
+	주민번호  고정문자형(14)
+
+메모장에서 연습 -> dbeaver 에서 붙여넣기 후 실행!
+
+	CREATE TABLE TEST01(
+		학번 NUMBER,
+		이름 VARCHAR2(5),
+		주민번호 CHAR(14)
+	);
+
+
+6. 테이블의 구조 수정하기 (ALTER)
+
+	ALTER TABLE 어떤 테이블 --TEST01
+	
+	1. 테이블명 수정 RENAME TO 새롭게 바꾸고 싶은 테이블 이름 
+	2. 컬럼명 수정 RENAME COLUMN 기존컬럼 TO 바꾸고 싶은 이름
+	3. 컬럼 추가 ADD 컬럼이름 타입;
+	4. 컬럼하나만 삭제 DROP COLUMN 기존컬럼;
+	
+	5. 컬럼의 구조를 바꾸고 싶을 때(타입변경)
+	alter table 테이블명 modify 기존컬럼 변경하고자하는 타입(길이)
+
+	ALTER TABLE TEST01 MODIFY SNUM NUMBER(10)
+
+[실습] 학번 컬럼의 타입(NUMBER)를 가변문자형 10으로 수정하기
+      이름을 가변길이 10으로 수정
+      주민번호를 고정길이 10으로 수정
+
+콜솔에서..
+      테이블 변경된 구조 확인하기
+
+[실습] 학번 컬럼을 SNUM으로 명칭 변경
+      이름 컬럼을 SNAME으로 명칭 변경
+      주민번호 컬럼 --> JUMIN으로 명칭 변경
+콜솔에서..
+      테이블 변경된 구조 확인하기
+
+[실습] 새로운 컬럼 SUBJECT를 가변문자형 10으로 추가하기
+콜솔에서..
+      테이블 변경된 구조 확인하기
+
+[실습] 특정 컬럼 지우기 : 주민번호(JUMIN)을 삭제하기
+콜솔에서.
+      테이블 변경된 구조 확인하기
+----------------------------------------------------------------
+
+7. 제약조건이 있는 테이블 생성해 보기
+
+ -자동차 테이블 테이블명은 영어로 작성한다!
+
+  요구사항 - 테이블 명세
+  컬럼명  타입
+  ID    숫자
+  브랜드  가변
+  색깔    가변
+  가격    ???
+
+sql> 생성해보기 : 실행은 하지 말것!
+
+	CREATE TABLE CAR(
+		ID NUMBER,
+		BRAND VARCHAR2(20),
+		COLOR VARCHAR2(20),
+		PRICE NUMBER(10),
+		--제약조건 : CONSTRAINT
+		--id라는 컬럼에 기본키(PK)를 걸거야 이때, 그 키값을 관리하는
+		  이름으로 PK_CAR 라고 지을 거야...
+		CONSTRAINT pk_car PRIMARY KEY(id) 
+
+
+	);
+
+		id에 데이터를 insert 하게 될때...
+		기존 데이터와 같은 아이디를 넣을 수 없다 : unique 속성
+		+
+		NULL을 넣을 수 없다 : NOT NULL 속성
+		= PRIMARY KEY
+
+-- PK_CAR 삭제하기 : ALTER
+ALTER TABLE CAR DROP CONSTRAINT PK_CAR; 
+
+--추가 : ID를 기본키로 추가하고 싶다
+--ALTER TABLE CAR ADD CONSTRAINT 이름 키조건(컬럼명);
+ALTER TABLE CAR ADD CONSTRAINT PKK_CAR PRIMARY KEY(ID);
+
+-------------------------------------------------------------------------
+ANIMAL 
+ID, 종류, 나이, 먹이
+ID : 번호 (SEQUENCE) 유일값을 만들어 낼 수 있다..
+제약조건은 테이블을 완성한 후, ALTER를 통해 설정하자, (ID를 PK로 설정한다)
+SQL>
+	CREATE TABLE ANIMAL(
+		ID NUMBER,
+		ANI_TYPE VARCHAR2(20),
+		AGE NUMBER(2),
+		FEED VARCHAR2(10)
+	);
+
+--데이터 삽입해 보기
+INSERT도 연습을 할 예정
+	데이터 삽입 : insert into 
+	데이터를 테이블에 삽입 : insert into 테이블명
+	테이블 어느 컬럼에 삽입? : insert into 테이블명 (id, ani_type, age, feed)
+	어떤 데이터 삽입? : values 키워드
+		--insert into animal (id, ani_type, age, feed)
+			values();
+
+	실제 테이터 삽입
+		--insert into animal (id, ani_type, age, feed)
+			values(1, 'puppy', 3, '잡식');
+
+-- 데이터 조회해 보기
+	SELECT * FROM ANIMAL;
+
+8. 제약조건 default, check 연습하기
+
+	default : insert할 때, 값이 지정되지 않으면, 테이블 생성시 지정해 놨던 값이 들어가게 해라!
+
+	그러면, 어떤 값 "중에서" 설정할까? 체크해 달라!
+		check(컬럼명 IN (값, 값))
+
+		성별(gender 컬럼)
+		check(gender in ('M','F'))
+
+	테이블명세 STUDENT
+		ID, 이름, 전공, 성별, 생일
+
+	CREATE TABLE STUDENT(
+	ID NUMBER(10),
+	NAME VARCHAR2(15),
+	MAJOR VARCHAR2(20),
+	GENDER CHAR(1),
+	BIRTH DATE
+	);
+
+	
+	--제약조건을 걸어보자
+	CREATE TABLE STUDENT(
+		ID NUMBER(10),
+		NAME VARCHAR2(15),
+		MAJOR VARCHAR2(20),
+		GENDER CHAR(1) DEFAULT 'F' NOT NULL --INSERT 값이 안나오면 무조건 여자로 잡는다!공백이 있으면 안된다!
+		       CONSTRAINT BAN_CHAR
+	       		CHECK(GENDER IN('M','F')), 
+		BIRTH DATE
+              		CONSTRAINT BAN_DATE
+	      		CHECK(BIRTH >= TO_DATE('1980-01-01', 'YYYY-MM-DD')), --문자열을 날짜로 바꿔주는 함수
+		CONSTRAINT PK_STD PRIMARY KEY(ID)
+	);
+
+	//1, 2, 3, 4, 5 중에서, 4번째인 GENDER 에는 데이터를 안넣겠다
+			그러면, 그 컬럼에 도메인(데이터)에는 무조건 'F'가 들어간다
+
+	--데이터 삽입(GENDER는 안넣기!!)
+	INSERT INTO STUDENT (ID, NAME, MAJOR, BIRTH) 
+	VALUES(1, '김세현', 'IT', TO_DATE('1994-10-02', 'YYYY-MM-DD'));
+
+
+9. 테이블 삭제
+
+	drop table car;
+
+	drop table school cascade constraints; --하위있는 제약조건 목록도 지워주세요!
+
+10. 과제 dbms_homework폴더 / day02 제출
+	메모장 하단에 작성
+
+	요구사항도 구상해보고
+	컬럼 만들어보고
+	컬럼의 구조를 수정해 보기
+	데이터 입력-조회
+	데이터 삭제
+	테이블 삭제
+
+	컬럼은 4개 이상, 제약조건 걸어주기, default, check 까지 반영해보기
+
+	"컬럼 이름변경 -> 테이블 이름변경 -> 컬럼 구조변경 -> 컬럼 추가 -> 데이터 삽입(insert)
+	 -> 조회(select) -> 컬럼 삭제 -> 모든 데이터 삭제 -> 테이블 삭제"
+
+	"테이블만들때, 회원정보, 성적표, 급여정보, 식당메뉴...."
+
+	요구사항
+	손님 번호, 메뉴명, 수량, 
+	
+
+[과제]
+	--성적표 테이블 만들기
+	CREATE TABLE REPORTCARD(
+	ID NUMBER(10),
+	FIRST_NAME VARCHAR2(10),
+	LAST_NAME VARCHAR2(10),
+	SUBJECT VARCHAR2(20),
+	GRADE CHAR(3) DEFAULT 'N/A' NOT NULL
+			CONSTRAINT GRADE_CHAR
+			CHECK(GRADE IN('A+','A','A-','B+','B','B-','C+','C','C-','D','F')),
+	GENDER CHAR(1) DEFAULT 'M' NOT NULL 
+			CONSTRAINT GENDER_CHAR
+			CHECK(GENDER IN('M','F')),
+	DOB DATE, --TO_DATE('YYYY-MM-DD'),
+	--CONSTRAINT PK_ID PRIMARY KEY(ID)
+	);
+
+	결과)
+	ID|FIRST_NAME|LAST_NAME|SUBJECT|GRADE|GENDER|DOB|
+	--|----------|---------|-------|-----|------|---|
+
+
+	
+
+	--데이터 INSERT 해보기
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, DOB) 
+	VALUES(1, 'JOHN', 'PETRUCCI','MATH', '1977-04-23'); 
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GRADE, DOB)
+	VALUES(2, 'STEVE', 'VAI','ENGLISH', 'A-', '1968-02-03');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GRADE, DOB)
+	VALUES(3, 'AL', 'DI MEOLA','ENGLISH', 'B+', '1954-07-26');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GRADE, DOB)
+	VALUES(4, 'CHICK', 'COREA','ENGLISH', 'A+', '1947-11-13');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GRADE, DOB)
+	VALUES(5, 'ALBERT', 'KING','ENGLISH', 'C', '1940-12-23');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GRADE, DOB)
+	VALUES(6, 'BRIAN', 'BAEK','ENGLISH', 'C+', '1984-09-10');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GRADE, DOB)
+	VALUES(7, 'LOGAN', 'LEE','ENGLISH', 'F', '1988-05-12');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GENDER, DOB)
+	VALUES(8, 'EMILY', 'REMLER', 'ENGLISH', 'F', '1960-01-22');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GENDER, DOB)
+	VALUES(9, 'JENNIFER', 'ANNISTON', 'ENLGIHS', 'F', '1972-11-22');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, DOB)
+	VALUES(10, 'BASKIN', 'ROBBINS', 'ENGLISH', '1960-01-22');
+
+	INSERT INTO REPORTCARD (ID, FIRST_NAME, LAST_NAME, SUBJECT, GENDER, DOB)
+	VALUES(11, 'COURTNEY', 'COX', 'ENGLISH', 'F', '1975-08-13');
+
+	결과)
+	ID|FIRST_NAME|LAST_NAME|SUBJECT|GRADE|GENDER|DOB                |
+	--|----------|---------|-------|-----|------|-------------------|
+ 	 1|JOHN      |PETRUCCI |MATH   |N/A  |M     |1977-04-23 00:00:00|
+ 	 2|STEVE     |VAI      |ENGLISH|A-   |M     |1968-02-03 00:00:00|
+ 	 3|AL        |DI MEOLA |ENGLISH|B+   |M     |1954-07-26 00:00:00|
+ 	 4|CHICK     |COREA    |ENGLISH|A+   |M     |1947-11-13 00:00:00|
+ 	 5|ALBERT    |KING     |ENGLISH|C    |M     |1940-12-23 00:00:00|
+	 6|BRIAN     |BAEK     |ENGLISH|C+   |M     |1984-09-10 00:00:00|
+ 	 7|LOGAN     |LEE      |ENGLISH|F    |M     |1988-05-12 00:00:00|
+ 	 8|EMILY     |REMLER   |ENGLISH|N/A  |F     |1960-01-22 00:00:00|
+ 	 9|JENNIFER  |ANNISTON |ENLGIHS|N/A  |F     |1972-11-22 00:00:00|
+	10|BASKIN    |ROBBINS  |ENGLISH|N/A  |M     |1960-01-22 00:00:00|
+	11|COURTNEY  |COX      |ENGLISH|N/A  |F     |1975-08-13 00:00:00|
+
+	
+
+	--컬럼 삭제해보기
+	ALTER TABLE REPORTCARD DROP COLUMN SUBJECT;
+
+	결과)
+	ID|FIRST_NAME|LAST_NAME|GRADE|GENDER|DOB                |
+	--|----------|---------|-----|------|-------------------|
+	 1|JOHN      |PETRUCCI |N/A  |M     |1977-04-23 00:00:00|
+ 	 2|STEVE     |VAI      |A-   |M     |1968-02-03 00:00:00|
+ 	 3|AL        |DI MEOLA |B+   |M     |1954-07-26 00:00:00|
+ 	 4|CHICK     |COREA    |A+   |M     |1947-11-13 00:00:00|
+ 	 5|ALBERT    |KING     |C    |M     |1940-12-23 00:00:00|
+	 6|BRIAN     |BAEK     |C+   |M     |1984-09-10 00:00:00|
+ 	 7|LOGAN     |LEE      |F    |M     |1988-05-12 00:00:00|
+ 	 8|EMILY     |REMLER   |N/A  |F     |1960-01-22 00:00:00|
+	 9|JENNIFER  |ANNISTON |N/A  |F     |1972-11-22 00:00:00|
+	10|BASKIN    |ROBBINS  |N/A  |M     |1960-01-22 00:00:00|
+	11|COURTNEY  |COX      |N/A  |F     |1975-08-13 00:00:00|
+	
+
+	--컬럼 추가해보기
+	ALTER TABLE REPORTCARD ADD HOMETOWN VARCHAR2(10);
+	ALTER TABLE REPORTCARD ADD MAJOR VARCHAR2(20);
+
+	결과)
+	ID|FIRST_NAME|LAST_NAME|GRADE|GENDER|DOB                |HOMETOWN|MAJOR|
+	--|----------|---------|-----|------|-------------------|--------|-----|
+	 1|JOHN      |PETRUCCI |N/A  |M     |1977-04-23 00:00:00|        |     |
+ 	 2|STEVE     |VAI      |A-   |M     |1968-02-03 00:00:00|        |     |
+ 	 3|AL        |DI MEOLA |B+   |M     |1954-07-26 00:00:00|        |     |
+ 	 4|CHICK     |COREA    |A+   |M     |1947-11-13 00:00:00|        |     |
+	 5|ALBERT    |KING     |C    |M     |1940-12-23 00:00:00|        |     |
+ 	 6|BRIAN     |BAEK     |C+   |M     |1984-09-10 00:00:00|        |     |
+ 	 7|LOGAN     |LEE      |F    |M     |1988-05-12 00:00:00|        |     |
+	 8|EMILY     |REMLER   |N/A  |F     |1960-01-22 00:00:00|        |     |
+	 9|JENNIFER  |ANNISTON |N/A  |F     |1972-11-22 00:00:00|        |     |
+	10|BASKIN    |ROBBINS  |N/A  |M     |1960-01-22 00:00:00|        |     |
+	11|COURTNEY  |COX      |N/A  |F     |1975-08-13 00:00:00|        |     |
+
+
+	--데이터 수정해보기
+	UPDATE REPORTCARD SET GRADE = 'B-' WHERE FIRST_NAME = 'JOHN';
+	UPDATE REPORTCARD SET GRADE = 'A+' WHERE LAST_NAME = 'REMLER';
+	UPDATE REPORTCARD SET HOMETOWN = 'NEW YORK' WHERE LAST_NAME = 'VAI';
+	UPDATE REPORTCARD SET HOMETOWN = 'NEW JERSEY', MAJOR = 'GUITAR PERFORMANCE' WHERE DOB = '1954-07-26';
+	UPDATE REPORTCARD SET HOMETOWN = 'SEOUL', MAJOR = 'COMPUTER SCIENCE' WHERE FIRST_NAME = 'BRIAN';
+
+	결과)
+	ID|FIRST_NAME|LAST_NAME|GRADE|GENDER|DOB                |HOMETOWN  |MAJOR             |
+	--|----------|---------|-----|------|-------------------|----------|------------------|
+	 1|JOHN      |PETRUCCI |B-   |M     |1977-04-23 00:00:00|          |                  |
+	 2|STEVE     |VAI      |A-   |M     |1968-02-03 00:00:00|NEW YORK  |                  |
+	 3|AL        |DI MEOLA |B+   |M     |1954-07-26 00:00:00|NEW JERSEY|GUITAR PERFORMANCE|
+	 4|CHICK     |COREA    |A+   |M     |1947-11-13 00:00:00|          |                  |
+	 5|ALBERT    |KING     |C    |M     |1940-12-23 00:00:00|          |                  |
+	 6|BRIAN     |BAEK     |C+   |M     |1984-09-10 00:00:00|SEOUL     |COMPUTER SCIENCE  |
+	 7|LOGAN     |LEE      |F    |M     |1988-05-12 00:00:00|          |                  |
+	 8|EMILY     |REMLER   |A+   |F     |1960-01-22 00:00:00|          |                  |
+	 9|JENNIFER  |ANNISTON |N/A  |F     |1972-11-22 00:00:00|          |                  |
+	10|BASKIN    |ROBBINS  |N/A  |M     |1960-01-22 00:00:00|          |                  |
+	11|COURTNEY  |COX      |N/A  |F     |1975-08-13 00:00:00|          |                  |
+	

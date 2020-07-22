@@ -1,0 +1,707 @@
+day01
+
+오늘 ~ 금요일 : sql 활용 (기초)
+다음주 : sql 응용 (심화)
+3주차 : 응용 - jdbc 연동, (sqld 자격증 - 본인 공부!)
+	     jdbc 연동 -> 자바 프로젝트 때 했던 것으로 업데이트 하자!
+
+~12.24 : 정보처리기사, "SQLD" 자격증 강력 권장!!!
+	 sql (DB)  빅데이터, 웹, 모바일, 응용프로그램 등등 DB의 활용분야가 광범위하다!
+
+* sqld 자격증 응시 정보 : www.dataq.or.kr
+ - 38회 : ~8.10 접수마감
+ - 39회 : ~11.02 접수마감
+ 응시료 : 50,000원 (필기만)
+-------------------------------------------------------------------------------
+1. DB 개요 (간단하게)
+2. 환경구축
+	1) 오라클 프로그램 설치 : 버전 oracle 11g XE
+			XE : express edition(학습용 버전, 경령화 되어 있다)
+
+	* 오라클 설치여부 확인 : 
+		1) 제어판 "프로그램 제거"에서 목록 보기
+		2) cmd창에서도 확인가능 "sqlplus" 라고 입력을 해본다!
+
+	2) 이클립스에 플러그인으로 DBeaver 설치
+
+	* DBeaver : DB 명령어, 구조 등을 GUI 환경에서 사용할 수 있도록 만든
+		    DBMS 프로그램(IDE) -  일종의 자바 - 이클립스라고 보면 된다!
+
+3. SQL 시작!!
+===================================================================================
+1. 환경 구축
+	1) 오라클 11g XE 버전 다운로드 받기
+		(1)오라클 사이트에 가기
+		(2)11g로 검색하자 *영어사이트에서 진행!
+		(3)"Oracle Database Software Downloads" 선택
+		(4)해당 페이지 맨 하단으로 이동
+		(5)oracle database 11g release 2 express edition for windows 64 선택
+		(6)다운로드 페이지 -> 내 컴퓨터에 맞는 버전 선택 64 bit or 32 bit
+		(7)OracleXE112_Win64.zip 압축해제 -> "DISK1 폴더" 생성
+		(8)setup.exe.로 실행 -> remove를 먼저하고 인스톨하기
+		(9)학원에서는 비밀번호를 1234로 쓴다
+		(10)Port for 'Oracle Database Listener': 1521 데이터베이스 고유번호
+		(11)HTTP Listener': 8081 인터넷으로 접속할려고 할때 쓰는 번호
+
+		정리 : 인스톨할 때,
+			database listener : 포트번호는 1521
+			database HTTP 포트번호 : 8080으로 하자
+					http 포트는 나중에 웹서버(톰캣)와 동일한 포트번호를 쓰게 된느데...
+					이때, 웹서버의 포트번호를 변경해서 설치하면 된다.
+			sys, system의 비번 설정
+				sys와 system은 내가 설치하는 데이터베이스를 관리하는 관리자 계정이다.
+				1234 로 알기 쉽게 지정하자!
+		
+		설치완료 -> 확인
+			c 프롬프트 화면(cmd화면)에서...
+
+			c:> sqlplus sys/1234 as SYSDBA  --라고 입력 후 엔터
+			팁) sql에서 주석은 -- 로 입력하면 주석!
+
+				select * from emp; --실행명령
+							↑
+							이 부분이 주석이다!
+
+"
+C:\Users\admin>sqlplus sys/1234 as SYSDBA  --> 관리자 계정
+
+SQL*Plus: Release 11.2.0.2.0 Production on 화 7월 21 10:25:16 2020
+
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
+
+SQL>
+"
+
+	 * sql> exit --종료
+
+
+
+C:\Users\admin>sqlplus system/1234 --> 일반 계정
+
+SQL*Plus: Release 11.2.0.2.0 Production on 화 7월 21 10:27:30 2020
+
+Copyright (c) 1982, 2014, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 11g Express Edition Release 11.2.0.2.0 - 64bit Production
+
+SQL>
+
+
+	* sql> 이 화면을 콘솔(터미널) 화면 이라고 부른다.
+
+
+
+
+ 2. 간단한 명령어
+	sql> show user --현재 접속중인 계정을 보여준다.
+	sql> conn 계정/비번 --다른 "일반" 계정으로 접속상태를 변경한다.
+		팁) sys 계정은 as sysdba 를 붙여야 한다.
+		* 화살표를 누르면 이전 명령을 찾을 수 있다!
+
+
+
+ 3. 데이터베이스 설치 완료
+	어떤 DB 인스턴스가 설치 되어 있지? - xe 라는 인스턴스가 설치되어 있다.
+	이 xe 라는 인스턴스의 관리자는 sys와 system이다.
+	sys는 슈퍼 관리자 이다
+	sys는 새로운 계정을 만들 수 있고, 그 계정에 권한을 부여/회수 할 수 있다.
+    1) 우선 이 xe 라는 데이터베이스에 사용자 계정이 누가 있는지 확인하자!
+
+	select * from all_users;	--마지막에 세미콜론
+					--all_uses는 테이블이다!
+					--all_users라는 테이블에서는 
+					  현재 물려있는 계정을 모아 놓고 있다.
+
+
+	간단한 명령어 : show linesize --현재 설정된 라인수를 보여주세요 (기본 80)
+		    이걸 160정도로 늘려서, 결과값을 보기 좋게 하자
+		    set linesize 160 --세미콜론 필요없다
+
+
+	※ HR 이나 SCOTT 계정으로 연습을 할 예정이다
+
+
+
+
+
+    2) 학습용 계정 hr 권한 풀기 명령
+	우선 hr 계정에 접속을 해보면....
+	account 가 locked된 상태이다..
+
+
+	SQL> conn hr/hr
+	ERROR:
+	ORA-28000: the account is locked
+
+	sys계정에서 hr을 사용할 수 있는 상태로 변경해 주자!
+
+
+     3) 특정 계정에 권한 주기
+
+	sys (또는 system 계정에서) hr에 권한을 수정해 줘야 한다.
+	수정 sql 명령어 : "alter 는 수정이다" 
+	-유저의 권한을 수정 : alter user ...
+	-테이블의 권한을 수정 : alter table ... 
+
+	sql> alter user [수정하고 싶은 계정] 
+		account unlock
+		identified by [변경하고 싶은 비밀번호]
+
+		hr 계정을 풀고싶다. 비밀번호는 hr로 할 거다!
+
+	SQL> alter user hr account unlock identified by hr
+  		2  <--- 다음 명령어를 달라는 표시이다
+			당황하지말고 ;를 추가해서 엔터를 눌러라
+
+
+	SP2-0640: Not connected
+	SQL> show user
+	USER is ""
+	
+	<수시로 유저를 확인해야 한다. 지금 sys에 연결이 안되어 있다.
+	다시 연결하자>
+
+	
+	SQL> conn sys/1234 as sysdba
+	Connected.
+	
+	<다시 hr 계정을 푸는 명령를 내리자>
+	
+	SQL> alter user hr account unlock identified by hr;
+
+	User altered.
+
+
+
+
+4. hr 계정에서
+	conn hr/hr
+	
+	1) hr계정이 갖고 있는 테이블은 어떤게 있니?
+	   select --조회하다! read에 해당한다!
+	   
+	   select 컬럼명 from 테이블;
+
+	2) 테이블 이름만 저장해 놓은 tab 이라는 테이블이 있다
+		(계정마다 다 있다)
+
+	   select * from tab; 
+		--*은 테이블을 구성하고 있는 모든 컬럼을 다 보여줘 라는 뜻
+		--hr은 7개의 물리적인 테이블과 1개의 view를 갖고 있다.
+		--view는 물리적인 테이블의 정보를 모아서 새롭게 테이블을 생성하는
+		  논리적인 테이블이다.
+
+	3) 그럼 테이블 jobs에 있는 컬럼, 데이터 구성 요소를 보고 싶다.
+	
+	    select * from jobs;
+
+	
+	4) 간단한 명령어
+	
+	    desc jobs; --테이블 명세 (describe jobs)
+
+		Type => 자료형
+			String => varchar2
+			int    => number
+
+5. scott 계정 활성화 하기
+		
+	프롬프트 화면
+	sql> 00000.sql --이렇게 입력하면 해당 파일에 있는 명령어를 실행하게 된다.
+		       --이때 파일명 앞에 반드시 "@"을 붙여야 한다.
+	scott.sql 의 경로를 확인한후, sql> 에서 @ 을 붙여 scott계정을 생성하자!
+	(팁) 만약 scott.sql이 C:> 에 있었다면...
+		sql>@c:>scott.sql 하면 된다
+
+
+
+	모든 유저 보기 : select * from all_users;
+
+	scott.sql 경로 위치 : 
+	
+C:\oraclexe\app\oracle\product\11.2.0\server\rdbms\admin\scott.sql
+
+[실습]
+	scott 계정이 목록에 있는 걸 확인했다.
+	scott이라는 사람은 실제 oracle 데이터베이스를 개발할 때 참여했던 사람이다.
+	scott은 애완고양이를 키웠는데, 그 애완 고양이 이름이 tiger였다고 한다.
+	그래서 전통적으로 scott계정의 비밀번호는 tiger라고 한다!
+
+	1)scott 계정에 연결해서,  
+	2)scott이 갖고 있는 테이블을 나열할 것
+	3)emp 테이블의 데이터를 확인할 것
+	4)emp 테이블 명세를 확인할 것 
+	
+<계정을 풀어야 한다>
+SQL> conn scott/tiger --invalid 유효하지 않다.
+		      --scott에 대한 계정권한이 없어서... 그래서, 권한을 수정해야한다.
+ERROR:
+ORA-01017: invalid username/password; logon denied
+
+
+Warning: You are no longer connected to ORACLE.
+
+
+<슈퍼 관리자로써 scott 계정을 풀어야 한다>
+SQL> conn sys/1234 as sysdba;
+Connected.
+SQL> alter user scott account unlock identified by tiger;
+
+User altered.
+
+
+<계정이 scott이라는 것을 확인함. 테이블을 구성하고 있는 모든 컬럼을 보여주는 명령어 내리기>
+SQL> show user
+USER is "SCOTT"
+SQL> select * from tab  --> emp 테이블의 데이터를 확인할 것
+  2  ;
+
+TNAME                                                        TABTYPE         CLUSTERID
+------------------------------------------------------------ -------------- ----------
+BONUS                                                        TABLE
+DEPT                                                         TABLE
+EMP                                                          TABLE
+SALGRADE                                                     TABLE
+
+emp 테이블 명세를 확인할 것 --> desc emp;
+
+
+
+[정리]
+
+	sys : 최고관리자, 슈퍼관리자, (xe라는)db를 관리하는 admin : "dba"
+	C:> sqlplus 계정/비밀번호
+	    sqlplus sys/1234 as sysdba (엔터)
+
+	간단한 명령어
+		show, set, conn, desc
+	
+	조회 명령어
+		select : Read	"C.R.U.D."(Create, Read, Update, Delete)
+			select 보고싶은 컬럼명, 보고싶은 컬럼명, 보고싶은 컬럼명
+			from 테이블명;
+
+	수정 명령어
+		alter 유저
+		      테이블
+
+	명령어 집합 파일 : 000.sql 을 활용해서 sql 명령을 수행한다.
+		      이때 붙이는 특수문자 : @
+
+콘솔 종료
+==========================================================================
+GUI 환경에서 DB명령 수행
+
+* 이클립스 -> workspace 연동 : DBMS_workspace
+
+1. 이클립스에 dbeaver 플러그인하기
+1) help 메뉴 - eclipse marketplace - fine "dbeaver" 검색
+2) 항목 맨 하단 -> dbeaver 7.1.2 버전을 "install"하면 된다.
+3) install anyway 선택
+4) 라이센스 동의 -> progress(우측 하단) 진행 정도 확인
+5) 기타 필요 프로그램 등장시 download 진행
+6) restart now
+7) perspective 창에서 dbeaver 선택 -> "완료"
+
+2. 자바 프로젝트 파일 생성
+1) file -  new - other - java project - perspective 자바 열지말것
+2) 프로젝트 폴더 구조
+	-bin
+	-bookmarks
+	....
+	-Scripts	<---- 여기에 sql 명령문들이 모이게 된다.
+	-src
+
+3. 커넥션 "XE" 설정하기
+	
+	우측 상단 프로젝트 탭에서...
+	DBMS 프로젝트 명
+	- Connections 항목 우클릭
+		-create 부터 설정 시작!!
+		1) oracle 선택
+		2) connections setting 창에서...
+		3) host : localhost (데이터베이스의 위치 - ip를 기재하면된다)
+			내 컴퓨터에 있는 db에 연동할 때는 ip대신
+			"localhost"라고 쓰면 된다(물론 내 ip를 써도 된다)
+			cmd -> C:> ipconfig
+		4) database : XE (컴퓨터에 깔린 database 이름) 인스턴스
+		5) username : hr
+		6) password : hr
+		7) edit driver setting : "ojdbc6.jar"
+					C:> oraclexe > app > oracle > product
+						> jdbc > lib > "ojdbc6.jar"
+					java database connectivity
+		8) Test Connection 버튼으로 연결 성공여부 확인하기
+
+	Script 언어 : 한줄씩 실행하는 언어
+
+4. Scripts 폴더에 sql 생성 -> 명령 -> 실행
+	day01 폴더에 sql_day01.sql 등을 만들예정!!!
+
+환경구축 끝!!!
+---------------------------------------------------------------------------------
+
+1. HR 계정보기
+
+	Tables : 실제 데이터를 저장하는 개체, 엔터티, 릴레이션이라고도 부름
+	Views : select를 통해 데이터를 읽어온 후, 조회한 데이터를 통해서
+		"다시" 테이블을 만들어낸 개체
+	Index : 데이터를 빠르게 조회하기 위해서 데이터에 포인터(위치값)을 지정하는 개체
+	Sequence : 일련번호 - 행마다 붙여지는 번호를 부여할 수 있는 개체
+			시퀀스이름.nextval
+			시퀀스이름.currval 등으로 값을 가져오거나 증가시킨다.
+	Synonym : 개체에 대한 별명, 테이블 등에 다른 이름을 붙여서 관리한다.
+			(셀프 조인 등)
+	Procedure : 자주 사용하는 SQL 구문들을 모아서 하나의 이름으로 지정한 후,
+		    필요할 때마다 해당 이름으로 여러 명령을 일괄처리하는 것
+	Function : 수행결과(연산결과)를 반환하는 개체
+		   오라클의 함수는 반드시 리턴값이 존재한다.
+	Trigger : DMS(삽입, 삭제, 갱신) 등의 문장을 수행하기 "전", "후"  등에
+		  자동으로 문장을 수행할 수 있도록 연쇄 반응을 일으키게 해 놓은 개체
+
+================================================================================
+SQL 문 : Structured Query Language (구조적 질의 언어)
+       : 데이터베이스에서 사용하는 명령어를 SQL 이라고 한다!
+       : 기능적으로 3개 요소로 구분 : DDL, DML, DCL
+
+1. DDL - data definition language
+		      정의(만들어) : 새롭게 만드는 것 (테이블, 유저)
+					테이블을 만들때 쓴다
+					지우는 것
+					수정하는 것
+	테이블과 관련된 명령
+		1."create" table ...   || create user .... 생성
+		2. "drop" table ...     || drop user .... 삭제
+		3. "alter" table ...    || alter table ... 수정
+		4. "TRUNCATE" : 테이블 내용(데이터)을 전체 삭제할 때 쓴다. 
+2. DML - data manipulation language : 4개
+		조작
+		
+		1. select ... : 읽다, 조회하다, read <== DQL (data query language)
+		2. insert ... : 삽입하다, create
+		3. delete ... : 삭제하다, delete
+		4. update ... : 수정하다, update <----- CRUD
+
+
+3. DCL - data control language : 데이터베이스 제어 하는 명령어
+
+		1. grant : 특정 계정에게 권하을 부여하는 것
+			   (resource, dba 권한부여, 연결시킬 수 있는 권한 등을 부여)
+		2. revoke : 부여된 권한을 회수 하는 것
+
+		(3-1) TCL : Transaction을 다루는 명령어들 ....
+		3. commit
+		4. rollback
+		5. savepoint
+
+		※ Transcation : sql 문장들이 여러 줄이 있을 때,
+				특정 소스 부분~다른 소스 영역까지를 하나의 묶음으로 관리한다.
+		
+		10	select
+		11	select
+				< ----------savepoint
+		12	select
+		13	insert
+				< ----------savepoint
+		14	insert
+		15	insert
+				< ----------commit
+-----------------------------------------------------------------------------
+	[정리] sql 명령어
+	1. DDL : create, alter, drop(테이블과 데이터 모두 삭제), truncate(테이블만 유지하고 데이터는 유지)
+	2. DML : select, insert, delete, update
+	3. DCL : grant, revoke, commit, rollback, savepoint
+	
+	<주의사항>
+	ㅁ sql을 사용할 때, 세미콜론으로 끝낸다.
+	  자바에서 sql을 String 으로 처리할 때가 있다.
+
+	  String sql = "select * from emp"; <-- 세미콜론 쓰면 안됨 자바에서
+
+	  sql에서 문자열을 사용할 때, 홑따옴표로 넣어야 한다.
+	  - select * from emp where name = 'kim';
+	  - 홑따옴표에 넣는 영문은 대소문자를 구분해서 정확하게 넣어야 한다.
+
+	  일반 명령에서는 대소문자를 구분하지 않는다.
+	  seleCT * FrOm EmP; --사용 가능하다!!
+	
+   	  sql 문장이 길어지면 줄바꿈을 해서 가독성을 높이자!!!
+	  - create table Test( snum number, name varchar2(30) ); 보다는
+
+	  - create tabel Test(
+		snum number,
+		name varchar2(30)
+	    );
+	    이렇게 작성하자!!
+
+[내일] 테이블과 관련된 명령어 연습
+	- 테이블 생성, 수정, 삭제
+
+-- hr 계정에서 각종 테이블 내용을 확인해 보자 (select * from 테이블 구조 이용해서 조회해 보기)
+
+<SELECT * FROM JOBS;>
+
+JOB_ID    |JOB_TITLE                      |MIN_SALARY|MAX_SALARY|
+----------|-------------------------------|----------|----------|
+AD_PRES   |President                      |     20080|     40000|
+AD_VP     |Administration Vice President  |     15000|     30000|
+AD_ASST   |Administration Assistant       |      3000|      6000|
+FI_MGR    |Finance Manager                |      8200|     16000|
+FI_ACCOUNT|Accountant                     |      4200|      9000|
+AC_MGR    |Accounting Manager             |      8200|     16000|
+AC_ACCOUNT|Public Accountant              |      4200|      9000|
+SA_MAN    |Sales Manager                  |     10000|     20080|
+SA_REP    |Sales Representative           |      6000|     12008|
+PU_MAN    |Purchasing Manager             |      8000|     15000|
+PU_CLERK  |Purchasing Clerk               |      2500|      5500|
+ST_MAN    |Stock Manager                  |      5500|      8500|
+ST_CLERK  |Stock Clerk                    |      2008|      5000|
+SH_CLERK  |Shipping Clerk                 |      2500|      5500|
+IT_PROG   |Programmer                     |      4000|     10000|
+MK_MAN    |Marketing Manager              |      9000|     15000|
+MK_REP    |Marketing Representative       |      4000|      9000|
+HR_REP    |Human Resources Representative |      4000|      9000|
+PR_REP    |Public Relations Representative|      4500|     10500|
+
+<SELECT * FROM COUNTRIES;>
+COUNTRY_ID|COUNTRY_NAME            |REGION_ID|
+----------|------------------------|---------|
+AR        |Argentina               |        2|
+AU        |Australia               |        3|
+BE        |Belgium                 |        1|
+BR        |Brazil                  |        2|
+CA        |Canada                  |        2|
+CH        |Switzerland             |        1|
+CN        |China                   |        3|
+DE        |Germany                 |        1|
+DK        |Denmark                 |        1|
+EG        |Egypt                   |        4|
+FR        |France                  |        1|
+IL        |Israel                  |        4|
+IN        |India                   |        3|
+IT        |Italy                   |        1|
+JP        |Japan                   |        3|
+KW        |Kuwait                  |        4|
+ML        |Malaysia                |        3|
+MX        |Mexico                  |        2|
+NG        |Nigeria                 |        4|
+NL        |Netherlands             |        1|
+SG        |Singapore               |        3|
+UK        |United Kingdom          |        1|
+US        |United States of America|        2|
+ZM        |Zambia                  |        4|
+ZW        |Zimbabwe                |        4|
+
+
+<SELECT * FROM DEPARTMENTS d ;>
+DEPARTMENT_ID|DEPARTMENT_NAME     |MANAGER_ID|LOCATION_ID|
+-------------|--------------------|----------|-----------|
+           10|Administration      |       200|       1700|
+           20|Marketing           |       201|       1800|
+           30|Purchasing          |       114|       1700|
+           40|Human Resources     |       203|       2400|
+           50|Shipping            |       121|       1500|
+           60|IT                  |       103|       1400|
+           70|Public Relations    |       204|       2700|
+           80|Sales               |       145|       2500|
+           90|Executive           |       100|       1700|
+          100|Finance             |       108|       1700|
+          110|Accounting          |       205|       1700|
+          120|Treasury            |          |       1700|
+          130|Corporate Tax       |          |       1700|
+          140|Control And Credit  |          |       1700|
+          150|Shareholder Services|          |       1700|
+          160|Benefits            |          |       1700|
+          170|Manufacturing       |          |       1700|
+          180|Construction        |          |       1700|
+          190|Contracting         |          |       1700|
+          200|Operations          |          |       1700|
+          210|IT Support          |          |       1700|
+          220|NOC                 |          |       1700|
+          230|IT Helpdesk         |          |       1700|
+          240|Government Sales    |          |       1700|
+          250|Retail Sales        |          |       1700|
+          260|Recruiting          |          |       1700|
+          270|Payroll             |          |       1700|
+
+
+<SELECT * FROM EMPLOYEES e ;>
+EMPLOYEE_ID|FIRST_NAME |LAST_NAME  |EMAIL   |PHONE_NUMBER      |HIRE_DATE          |JOB_ID    |SALARY|COMMISSION_PCT|MANAGER_ID|DEPARTMENT_ID|
+-----------|-----------|-----------|--------|------------------|-------------------|----------|------|--------------|----------|-------------|
+        100|Steven     |King       |SKING   |515.123.4567      |2003-06-17 00:00:00|AD_PRES   | 24000|              |          |           90|
+        101|Neena      |Kochhar    |NKOCHHAR|515.123.4568      |2005-09-21 00:00:00|AD_VP     | 17000|              |       100|           90|
+        102|Lex        |De Haan    |LDEHAAN |515.123.4569      |2001-01-13 00:00:00|AD_VP     | 17000|              |       100|           90|
+        103|Alexander  |Hunold     |AHUNOLD |590.423.4567      |2006-01-03 00:00:00|IT_PROG   |  9000|              |       102|           60|
+        104|Bruce      |Ernst      |BERNST  |590.423.4568      |2007-05-21 00:00:00|IT_PROG   |  6000|              |       103|           60|
+        105|David      |Austin     |DAUSTIN |590.423.4569      |2005-06-25 00:00:00|IT_PROG   |  4800|              |       103|           60|
+        106|Valli      |Pataballa  |VPATABAL|590.423.4560      |2006-02-05 00:00:00|IT_PROG   |  4800|              |       103|           60|
+        107|Diana      |Lorentz    |DLORENTZ|590.423.5567      |2007-02-07 00:00:00|IT_PROG   |  4200|              |       103|           60|
+        108|Nancy      |Greenberg  |NGREENBE|515.124.4569      |2002-08-17 00:00:00|FI_MGR    | 12008|              |       101|          100|
+        109|Daniel     |Faviet     |DFAVIET |515.124.4169      |2002-08-16 00:00:00|FI_ACCOUNT|  9000|              |       108|          100|
+        110|John       |Chen       |JCHEN   |515.124.4269      |2005-09-28 00:00:00|FI_ACCOUNT|  8200|              |       108|          100|
+        111|Ismael     |Sciarra    |ISCIARRA|515.124.4369      |2005-09-30 00:00:00|FI_ACCOUNT|  7700|              |       108|          100|
+        112|Jose Manuel|Urman      |JMURMAN |515.124.4469      |2006-03-07 00:00:00|FI_ACCOUNT|  7800|              |       108|          100|
+        113|Luis       |Popp       |LPOPP   |515.124.4567      |2007-12-07 00:00:00|FI_ACCOUNT|  6900|              |       108|          100|
+        114|Den        |Raphaely   |DRAPHEAL|515.127.4561      |2002-12-07 00:00:00|PU_MAN    | 11000|              |       100|           30|
+        115|Alexander  |Khoo       |AKHOO   |515.127.4562      |2003-05-18 00:00:00|PU_CLERK  |  3100|              |       114|           30|
+        116|Shelli     |Baida      |SBAIDA  |515.127.4563      |2005-12-24 00:00:00|PU_CLERK  |  2900|              |       114|           30|
+        117|Sigal      |Tobias     |STOBIAS |515.127.4564      |2005-07-24 00:00:00|PU_CLERK  |  2800|              |       114|           30|
+        118|Guy        |Himuro     |GHIMURO |515.127.4565      |2006-11-15 00:00:00|PU_CLERK  |  2600|              |       114|           30|
+        119|Karen      |Colmenares |KCOLMENA|515.127.4566      |2007-08-10 00:00:00|PU_CLERK  |  2500|              |       114|           30|
+        120|Matthew    |Weiss      |MWEISS  |650.123.1234      |2004-07-18 00:00:00|ST_MAN    |  8000|              |       100|           50|
+        121|Adam       |Fripp      |AFRIPP  |650.123.2234      |2005-04-10 00:00:00|ST_MAN    |  8200|              |       100|           50|
+        122|Payam      |Kaufling   |PKAUFLIN|650.123.3234      |2003-05-01 00:00:00|ST_MAN    |  7900|              |       100|           50|
+        123|Shanta     |Vollman    |SVOLLMAN|650.123.4234      |2005-10-10 00:00:00|ST_MAN    |  6500|              |       100|           50|
+        124|Kevin      |Mourgos    |KMOURGOS|650.123.5234      |2007-11-16 00:00:00|ST_MAN    |  5800|              |       100|           50|
+        125|Julia      |Nayer      |JNAYER  |650.124.1214      |2005-07-16 00:00:00|ST_CLERK  |  3200|              |       120|           50|
+        126|Irene      |Mikkilineni|IMIKKILI|650.124.1224      |2006-09-28 00:00:00|ST_CLERK  |  2700|              |       120|           50|
+        127|James      |Landry     |JLANDRY |650.124.1334      |2007-01-14 00:00:00|ST_CLERK  |  2400|              |       120|           50|
+        128|Steven     |Markle     |SMARKLE |650.124.1434      |2008-03-08 00:00:00|ST_CLERK  |  2200|              |       120|           50|
+        129|Laura      |Bissot     |LBISSOT |650.124.5234      |2005-08-20 00:00:00|ST_CLERK  |  3300|              |       121|           50|
+        130|Mozhe      |Atkinson   |MATKINSO|650.124.6234      |2005-10-30 00:00:00|ST_CLERK  |  2800|              |       121|           50|
+        131|James      |Marlow     |JAMRLOW |650.124.7234      |2005-02-16 00:00:00|ST_CLERK  |  2500|              |       121|           50|
+        132|TJ         |Olson      |TJOLSON |650.124.8234      |2007-04-10 00:00:00|ST_CLERK  |  2100|              |       121|           50|
+        133|Jason      |Mallin     |JMALLIN |650.127.1934      |2004-06-14 00:00:00|ST_CLERK  |  3300|              |       122|           50|
+        134|Michael    |Rogers     |MROGERS |650.127.1834      |2006-08-26 00:00:00|ST_CLERK  |  2900|              |       122|           50|
+        135|Ki         |Gee        |KGEE    |650.127.1734      |2007-12-12 00:00:00|ST_CLERK  |  2400|              |       122|           50|
+        136|Hazel      |Philtanker |HPHILTAN|650.127.1634      |2008-02-06 00:00:00|ST_CLERK  |  2200|              |       122|           50|
+        137|Renske     |Ladwig     |RLADWIG |650.121.1234      |2003-07-14 00:00:00|ST_CLERK  |  3600|              |       123|           50|
+        138|Stephen    |Stiles     |SSTILES |650.121.2034      |2005-10-26 00:00:00|ST_CLERK  |  3200|              |       123|           50|
+        139|John       |Seo        |JSEO    |650.121.2019      |2006-02-12 00:00:00|ST_CLERK  |  2700|              |       123|           50|
+        140|Joshua     |Patel      |JPATEL  |650.121.1834      |2006-04-06 00:00:00|ST_CLERK  |  2500|              |       123|           50|
+        141|Trenna     |Rajs       |TRAJS   |650.121.8009      |2003-10-17 00:00:00|ST_CLERK  |  3500|              |       124|           50|
+        142|Curtis     |Davies     |CDAVIES |650.121.2994      |2005-01-29 00:00:00|ST_CLERK  |  3100|              |       124|           50|
+        143|Randall    |Matos      |RMATOS  |650.121.2874      |2006-03-15 00:00:00|ST_CLERK  |  2600|              |       124|           50|
+        144|Peter      |Vargas     |PVARGAS |650.121.2004      |2006-07-09 00:00:00|ST_CLERK  |  2500|              |       124|           50|
+        145|John       |Russell    |JRUSSEL |011.44.1344.429268|2004-10-01 00:00:00|SA_MAN    | 14000|           0.4|       100|           80|
+        146|Karen      |Partners   |KPARTNER|011.44.1344.467268|2005-01-05 00:00:00|SA_MAN    | 13500|           0.3|       100|           80|
+        147|Alberto    |Errazuriz  |AERRAZUR|011.44.1344.429278|2005-03-10 00:00:00|SA_MAN    | 12000|           0.3|       100|           80|
+        148|Gerald     |Cambrault  |GCAMBRAU|011.44.1344.619268|2007-10-15 00:00:00|SA_MAN    | 11000|           0.3|       100|           80|
+        149|Eleni      |Zlotkey    |EZLOTKEY|011.44.1344.429018|2008-01-29 00:00:00|SA_MAN    | 10500|           0.2|       100|           80|
+        150|Peter      |Tucker     |PTUCKER |011.44.1344.129268|2005-01-30 00:00:00|SA_REP    | 10000|           0.3|       145|           80|
+        151|David      |Bernstein  |DBERNSTE|011.44.1344.345268|2005-03-24 00:00:00|SA_REP    |  9500|          0.25|       145|           80|
+        152|Peter      |Hall       |PHALL   |011.44.1344.478968|2005-08-20 00:00:00|SA_REP    |  9000|          0.25|       145|           80|
+        153|Christopher|Olsen      |COLSEN  |011.44.1344.498718|2006-03-30 00:00:00|SA_REP    |  8000|           0.2|       145|           80|
+        154|Nanette    |Cambrault  |NCAMBRAU|011.44.1344.987668|2006-12-09 00:00:00|SA_REP    |  7500|           0.2|       145|           80|
+        155|Oliver     |Tuvault    |OTUVAULT|011.44.1344.486508|2007-11-23 00:00:00|SA_REP    |  7000|          0.15|       145|           80|
+        156|Janette    |King       |JKING   |011.44.1345.429268|2004-01-30 00:00:00|SA_REP    | 10000|          0.35|       146|           80|
+        157|Patrick    |Sully      |PSULLY  |011.44.1345.929268|2004-03-04 00:00:00|SA_REP    |  9500|          0.35|       146|           80|
+        158|Allan      |McEwen     |AMCEWEN |011.44.1345.829268|2004-08-01 00:00:00|SA_REP    |  9000|          0.35|       146|           80|
+        159|Lindsey    |Smith      |LSMITH  |011.44.1345.729268|2005-03-10 00:00:00|SA_REP    |  8000|           0.3|       146|           80|
+        160|Louise     |Doran      |LDORAN  |011.44.1345.629268|2005-12-15 00:00:00|SA_REP    |  7500|           0.3|       146|           80|
+        161|Sarath     |Sewall     |SSEWALL |011.44.1345.529268|2006-11-03 00:00:00|SA_REP    |  7000|          0.25|       146|           80|
+        162|Clara      |Vishney    |CVISHNEY|011.44.1346.129268|2005-11-11 00:00:00|SA_REP    | 10500|          0.25|       147|           80|
+        163|Danielle   |Greene     |DGREENE |011.44.1346.229268|2007-03-19 00:00:00|SA_REP    |  9500|          0.15|       147|           80|
+        164|Mattea     |Marvins    |MMARVINS|011.44.1346.329268|2008-01-24 00:00:00|SA_REP    |  7200|           0.1|       147|           80|
+        165|David      |Lee        |DLEE    |011.44.1346.529268|2008-02-23 00:00:00|SA_REP    |  6800|           0.1|       147|           80|
+        166|Sundar     |Ande       |SANDE   |011.44.1346.629268|2008-03-24 00:00:00|SA_REP    |  6400|           0.1|       147|           80|
+        167|Amit       |Banda      |ABANDA  |011.44.1346.729268|2008-04-21 00:00:00|SA_REP    |  6200|           0.1|       147|           80|
+        168|Lisa       |Ozer       |LOZER   |011.44.1343.929268|2005-03-11 00:00:00|SA_REP    | 11500|          0.25|       148|           80|
+        169|Harrison   |Bloom      |HBLOOM  |011.44.1343.829268|2006-03-23 00:00:00|SA_REP    | 10000|           0.2|       148|           80|
+        170|Tayler     |Fox        |TFOX    |011.44.1343.729268|2006-01-24 00:00:00|SA_REP    |  9600|           0.2|       148|           80|
+        171|William    |Smith      |WSMITH  |011.44.1343.629268|2007-02-23 00:00:00|SA_REP    |  7400|          0.15|       148|           80|
+        172|Elizabeth  |Bates      |EBATES  |011.44.1343.529268|2007-03-24 00:00:00|SA_REP    |  7300|          0.15|       148|           80|
+        173|Sundita    |Kumar      |SKUMAR  |011.44.1343.329268|2008-04-21 00:00:00|SA_REP    |  6100|           0.1|       148|           80|
+        174|Ellen      |Abel       |EABEL   |011.44.1644.429267|2004-05-11 00:00:00|SA_REP    | 11000|           0.3|       149|           80|
+        175|Alyssa     |Hutton     |AHUTTON |011.44.1644.429266|2005-03-19 00:00:00|SA_REP    |  8800|          0.25|       149|           80|
+        176|Jonathon   |Taylor     |JTAYLOR |011.44.1644.429265|2006-03-24 00:00:00|SA_REP    |  8600|           0.2|       149|           80|
+        177|Jack       |Livingston |JLIVINGS|011.44.1644.429264|2006-04-23 00:00:00|SA_REP    |  8400|           0.2|       149|           80|
+        178|Kimberely  |Grant      |KGRANT  |011.44.1644.429263|2007-05-24 00:00:00|SA_REP    |  7000|          0.15|       149|             |
+        179|Charles    |Johnson    |CJOHNSON|011.44.1644.429262|2008-01-04 00:00:00|SA_REP    |  6200|           0.1|       149|           80|
+        180|Winston    |Taylor     |WTAYLOR |650.507.9876      |2006-01-24 00:00:00|SH_CLERK  |  3200|              |       120|           50|
+        181|Jean       |Fleaur     |JFLEAUR |650.507.9877      |2006-02-23 00:00:00|SH_CLERK  |  3100|              |       120|           50|
+        182|Martha     |Sullivan   |MSULLIVA|650.507.9878      |2007-06-21 00:00:00|SH_CLERK  |  2500|              |       120|           50|
+        183|Girard     |Geoni      |GGEONI  |650.507.9879      |2008-02-03 00:00:00|SH_CLERK  |  2800|              |       120|           50|
+        184|Nandita    |Sarchand   |NSARCHAN|650.509.1876      |2004-01-27 00:00:00|SH_CLERK  |  4200|              |       121|           50|
+        185|Alexis     |Bull       |ABULL   |650.509.2876      |2005-02-20 00:00:00|SH_CLERK  |  4100|              |       121|           50|
+        186|Julia      |Dellinger  |JDELLING|650.509.3876      |2006-06-24 00:00:00|SH_CLERK  |  3400|              |       121|           50|
+        187|Anthony    |Cabrio     |ACABRIO |650.509.4876      |2007-02-07 00:00:00|SH_CLERK  |  3000|              |       121|           50|
+        188|Kelly      |Chung      |KCHUNG  |650.505.1876      |2005-06-14 00:00:00|SH_CLERK  |  3800|              |       122|           50|
+        189|Jennifer   |Dilly      |JDILLY  |650.505.2876      |2005-08-13 00:00:00|SH_CLERK  |  3600|              |       122|           50|
+        190|Timothy    |Gates      |TGATES  |650.505.3876      |2006-07-11 00:00:00|SH_CLERK  |  2900|              |       122|           50|
+        191|Randall    |Perkins    |RPERKINS|650.505.4876      |2007-12-19 00:00:00|SH_CLERK  |  2500|              |       122|           50|
+        192|Sarah      |Bell       |SBELL   |650.501.1876      |2004-02-04 00:00:00|SH_CLERK  |  4000|              |       123|           50|
+        193|Britney    |Everett    |BEVERETT|650.501.2876      |2005-03-03 00:00:00|SH_CLERK  |  3900|              |       123|           50|
+        194|Samuel     |McCain     |SMCCAIN |650.501.3876      |2006-07-01 00:00:00|SH_CLERK  |  3200|              |       123|           50|
+        195|Vance      |Jones      |VJONES  |650.501.4876      |2007-03-17 00:00:00|SH_CLERK  |  2800|              |       123|           50|
+        196|Alana      |Walsh      |AWALSH  |650.507.9811      |2006-04-24 00:00:00|SH_CLERK  |  3100|              |       124|           50|
+        197|Kevin      |Feeney     |KFEENEY |650.507.9822      |2006-05-23 00:00:00|SH_CLERK  |  3000|              |       124|           50|
+        198|Donald     |OConnell   |DOCONNEL|650.507.9833      |2007-06-21 00:00:00|SH_CLERK  |  2600|              |       124|           50|
+        199|Douglas    |Grant      |DGRANT  |650.507.9844      |2008-01-13 00:00:00|SH_CLERK  |  2600|              |       124|           50|
+        200|Jennifer   |Whalen     |JWHALEN |515.123.4444      |2003-09-17 00:00:00|AD_ASST   |  4400|              |       101|           10|
+        201|Michael    |Hartstein  |MHARTSTE|515.123.5555      |2004-02-17 00:00:00|MK_MAN    | 13000|              |       100|           20|
+        202|Pat        |Fay        |PFAY    |603.123.6666      |2005-08-17 00:00:00|MK_REP    |  6000|              |       201|           20|
+        203|Susan      |Mavris     |SMAVRIS |515.123.7777      |2002-06-07 00:00:00|HR_REP    |  6500|              |       101|           40|
+        204|Hermann    |Baer       |HBAER   |515.123.8888      |2002-06-07 00:00:00|PR_REP    | 10000|              |       101|           70|
+        205|Shelley    |Higgins    |SHIGGINS|515.123.8080      |2002-06-07 00:00:00|AC_MGR    | 12008|              |       101|          110|
+        206|William    |Gietz      |WGIETZ  |515.123.8181      |2002-06-07 00:00:00|AC_ACCOUNT|  8300|              |       205|          110|
+
+
+<SELECT * FROM JOB_HISTORY jh ;>
+EMPLOYEE_ID|START_DATE         |END_DATE           |JOB_ID    |DEPARTMENT_ID|
+-----------|-------------------|-------------------|----------|-------------|
+        102|2001-01-13 00:00:00|2006-07-24 00:00:00|IT_PROG   |           60|
+        101|1997-09-21 00:00:00|2001-10-27 00:00:00|AC_ACCOUNT|          110|
+        101|2001-10-28 00:00:00|2005-03-15 00:00:00|AC_MGR    |          110|
+        201|2004-02-17 00:00:00|2007-12-19 00:00:00|MK_REP    |           20|
+        114|2006-03-24 00:00:00|2007-12-31 00:00:00|ST_CLERK  |           50|
+        122|2007-01-01 00:00:00|2007-12-31 00:00:00|ST_CLERK  |           50|
+        200|1995-09-17 00:00:00|2001-06-17 00:00:00|AD_ASST   |           90|
+        176|2006-03-24 00:00:00|2006-12-31 00:00:00|SA_REP    |           80|
+        176|2007-01-01 00:00:00|2007-12-31 00:00:00|SA_MAN    |           80|
+        200|2002-07-01 00:00:00|2006-12-31 00:00:00|AC_ACCOUNT|           90|
+
+<SELECT * FROM LOCATIONS l ;>
+LOCATION_ID|STREET_ADDRESS                          |POSTAL_CODE|CITY               |STATE_PROVINCE   |COUNTRY_ID|
+-----------|----------------------------------------|-----------|-------------------|-----------------|----------|
+       1000|1297 Via Cola di Rie                    |00989      |Roma               |                 |IT        |
+       1100|93091 Calle della Testa                 |10934      |Venice             |                 |IT        |
+       1200|2017 Shinjuku-ku                        |1689       |Tokyo              |Tokyo Prefecture |JP        |
+       1300|9450 Kamiya-cho                         |6823       |Hiroshima          |                 |JP        |
+       1400|2014 Jabberwocky Rd                     |26192      |Southlake          |Texas            |US        |
+       1500|2011 Interiors Blvd                     |99236      |South San Francisco|California       |US        |
+       1600|2007 Zagora St                          |50090      |South Brunswick    |New Jersey       |US        |
+       1700|2004 Charade Rd                         |98199      |Seattle            |Washington       |US        |
+       1800|147 Spadina Ave                         |M5V 2L7    |Toronto            |Ontario          |CA        |
+       1900|6092 Boxwood St                         |YSW 9T2    |Whitehorse         |Yukon            |CA        |
+       2000|40-5-12 Laogianggen                     |190518     |Beijing            |                 |CN        |
+       2100|1298 Vileparle (E)                      |490231     |Bombay             |Maharashtra      |IN        |
+       2200|12-98 Victoria Street                   |2901       |Sydney             |New South Wales  |AU        |
+       2300|198 Clementi North                      |540198     |Singapore          |                 |SG        |
+       2400|8204 Arthur St                          |           |London             |                 |UK        |
+       2500|Magdalen Centre, The Oxford Science Park|OX9 9ZB    |Oxford             |Oxford           |UK        |
+       2600|9702 Chester Road                       |09629850293|Stretford          |Manchester       |UK        |
+       2700|Schwanthalerstr. 7031                   |80925      |Munich             |Bavaria          |DE        |
+       2800|Rua Frei Caneca 1360                    |01307-002  |Sao Paulo          |Sao Paulo        |BR        |
+       2900|20 Rue des Corps-Saints                 |1730       |Geneva             |Geneve           |CH        |
+       3000|Murtenstrasse 921                       |3095       |Bern               |BE               |CH        |
+       3100|Pieter Breughelstraat 837               |3029SK     |Utrecht            |Utrecht          |NL        |
+       3200|Mariano Escobedo 9991                   |11932      |Mexico City        |Distrito Federal,|MX        |
+
+
+
+<SELECT * FROM REGIONS r ;>
+REGION_ID|REGION_NAME           |
+---------|----------------------|
+        1|Europe                |
+        2|Americas              |
+        3|Asia                  |
+        4|Middle East and Africa|
+
+
+
+
+
+
+
+
+
+
+
+
