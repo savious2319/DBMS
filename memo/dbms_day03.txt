@@ -1,0 +1,466 @@
+day03 
+
+1. 요구사항
+
+	FLOWER 테이블 생성
+	컬럼명 : NAME, AGE, COLOR
+	FLOWER 에서 FLOWER2 로 변경
+	FLOWER2에서 PRICE컬럼을 추가한다.
+	INSERT로 값 넣기 (2행)
+	FLOWER2 테이블 값들 삭제
+	FLOWER2 테이블 삭제
+
+SQL> 작성하기
+
+	CREATE TABLE FLOWER(
+		NAME VARCHAR2(10),
+		AGE NUMBER,
+		COLOR CHAR(10) 
+	);
+
+
+	ALTER TABLE FLOWER RENAME TO FLOWER2;
+
+	ALTER TABLE FLOWER ADD PRICE NUMBER(5);
+
+	INSERT INTO FLOWER2(NAME, AGE, COLOR, PRICE)
+	VALUES('ROSE', 12, 'VELVET', 10000);
+
+	TRUNCATE FLOWER2;
+
+	DROP TABLE FLOWER2;
+====================================================
+오늘) 데이터베이스 설계
+1. 테이블 구조
+2. 무결성 제약조건(복습)
+3. 모델링
+-------------------------------------------------------
+1. 테이블의 구조
+	* 핵심단어
+	-> 열 : 컬럼, 필드, 속성
+	-> 행 : 튜플(Tuple), 레코드, 카디널리티
+	-> 제약조건 : Primary Key, Unique, NOT NULL, Check
+		(외래키 : foreign key)
+
+sql> select * from dept;
+부서만 따로 모아서 정리한 테이블
+DEPTNO 는 PRIMARY KEY와 NOT NULL 제약조건이 있어야 한다!
+
+테이블의 열 (DEPTNO, DNAME, LOC...), 칸, 자바(인스턴스 변수) == 필드, (테이블을 구성하고 있는) 속성 attributes
+  ↓      ↓          ↓
+DEPTNO|DNAME     |LOC     | 
+------|----------|--------|
+    10|ACCOUNTING|NEW YORK|  (자바)행, Tuple 튜플, Record 레코드, 클래스에서는 인스턴스 class DEPT(int DEPTNO, String DNAME, String LOC)
+    20|RESEARCH  |DALLAS  |	몇개의 튜플이 DEPT에 있나요? 4개의 튜플 == Cardinality (대응수)
+    30|SALES     |CHICAGO |
+    40|OPERATIONS|BOSTON  |   값 : 도메인 40, DALLAS 등등을 도메인이라고 한다.
+
+    ↑ deptno(부서번호)를 만들 때... 중복을 허용하지 않으며, NULL이 들어가면 안된다. (유일값)
+	이 부서 번호는 다른 테이블(EMP)을 만들 때, 기준으로 삼을 수 있다. 
+	이 부서 번호는 튜플(레코드)을 규정짓는 기준 값이다.
+	
+	다른 테이블에 참조값으로 제공하기 위한 DEPTNO는 PRIMARY KEY 제약조건이 걸려있어야한다.
+	 : 다른 테이블에 참조값을 제공하는 키는 PRIMARY KEY 여야 한다.
+	 : PRIMARY KEY는 튜플을 규정할 수 있는 값이다! -> 30을 말하면 DNAME이 SALES LOC이 CHICAGO 라고 알 수 있다	
+
+	* 외래키 (FOREIGN KEY)
+
+DEPTNO의 KEY 값을 참조했다 (외래키 : foreign key)
+외부의 테이블을 참조해서 만든 테이블
+
+EMPNO|ENAME |JOB      |MGR |HIREDATE           |SAL |COMM|DEPTNO|
+-----|------|---------|----|-------------------|----|----|------|
+ 7369|SMITH |CLERK    |7902|1980-12-17 00:00:00| 800|    |    20|
+ 7499|ALLEN |SALESMAN |7698|1981-02-20 00:00:00|1600| 300|    30|
+ 7521|WARD  |SALESMAN |7698|1981-02-22 00:00:00|1250| 500|    30|
+ 7566|JONES |MANAGER  |7839|1981-04-02 00:00:00|2975|    |    20|
+ 7654|MARTIN|SALESMAN |7698|1981-09-28 00:00:00|1250|1400|    30|
+
+EMP 테이블에서 DEPTNO 에 있는 20, 30, 30.. 등의 도메인을 갖고는 정확한 부서명, 지역 등을 알 수 없다.
+DEPT 테이블을 봐야지만 해당 내용을 볼 수 있다....
+이렇게 다른 테이블에 있는 정보와 공유되고 있는 컬럼을 외래키 라고 한다.
+
+
+열, 행, 도메인
+테이블 == 엔티티(ENTITY) == RELATION
+
+[실습] scott 계정에서 emp2 테이블을 생성한다.
+      emp2 테이블의 속성(칸, 열) 요구사항은 EMP 테이블을 그래도 사용한다.
+      이때, DEPTNO 컬럼은 DEPT 테이블에서 참조 제약조건을 걸어야 한다.
+      어떻게 참조 제약조건을 거는지 문법 살펴보기!
+
+ SQL> 
+
+	CREATE TABLE EMP2(
+		EMPNO NUMBER(4,0),
+		JOB VARCHAR2(9),
+		SAL NUMBER(7,2)
+		DEPTNO NUMBER(2,0)  --DEPT.DEPTNO의 조건과 동일
+		--제약조건
+		CONSTRAINT [키 이름] [키조건 == 키 타입](적용할 내 컬럼)
+			REFERENCES 참조대상테이블(참조대상 컬럼명) 
+	);	
+
+
+
+
+		CREATE TABLE EMP2(
+		EMPNO NUMBER(4,0),
+		JOB VARCHAR2(9),
+		SAL NUMBER(7,2)
+		DEPTNO NUMBER(2,0)  --DEPT.DEPTNO의 조건과 동일
+		--제약조건
+		CONSTRAINT FK_DEPTNO2 FOREIGN KEY(DEPTNO)
+			REFERENCES DEPT(DEPTNO),
+		CONTRAINT PK_EMPNO PRIMARY KEY(EMPNO)
+			--부모인 DEPT에 걸어주는게 좋다
+	);
+
+
+------------------------------------------------------------------------------------
+2. 무결성 제약 조건
+ 1)무결성 조건 : 데이터를 입력할 때, 부적절한 데이터가 입력되는 것을 방지하기 위해, 각 컬럼에 정의하는 여러가지 규칙
+	
+	데이터를 넣을 때, 결함이 없어야 한다.
+	(1) 규칙 : 무결성 조건의 규칙!
+	   -정확성: 데이터는 애매하지 않아야 한다. (추상적이지 않아야 한다)
+		  손님 A는 쓴맛	"쓴맛"
+		  저 사람은 귀엽게 생겼다. "귀엾다"
+
+	   -일관성: 각 사용자(테이블)는 일관된 데이터를 볼 수 있어야 한다.
+	   -유효성: 실제 존재하는 데이터어야 한다.
+
+	(2) 무결성 제약 조건의 종류 : 
+		기본키, 참조키,  고유키,     NOT NULL,        CHECK
+		 PK     FK     UNIQUE     NOT NULL     이 값중에서만 선택해
+
+	(3) 무결성 종류
+		- 개체 무결성
+		- 참조 무결성
+		- 도메인 무결성 (중요함)
+
+	(4) 개체 무결성이란? (중요함)
+	    테이블에서 튜플을 규정짓기 위해 PK로 선택된 컬럼이 존재해야 하고,
+	    선택된 컬럼은 참조값을 갖을 때, PK 값으로 참조해야 한다.
+	    빈 값(NULL)은 허용하지 않는다.
+
+	(5) 참조 무결성이란? (중요함)
+	    테이블간의 참조값을 만들 때, 항상 일관된 값을 갖도록 유지해야 한다.
+	    A라는 테이블에서 컬럼의 값은 자신의 컬럼 또는 다른 테이블의 컬럼 값과
+	    일치해야 한다.
+
+	   DEPT.DEPTNO 와 EMP.DEPTNO는 항상 같은 값을 유지하고 있어야 한다.
+	   가령, DEPT.DEPTNO의 10번 값은... 뉴욕, 회계부 인데....
+	        EMP.DEPTNO의 10번은 다른 값을 갖고 있다면....
+		참조 무결성 위배가 된다. (생성시부터 무결성 제약조건을 걸어놨기 때문에,
+				    값 삽입 자체에 문제가 발생된다)
+	   다른 테이블의 컬럼 값을 참조하고 있을 때, 그 테이블을 자식 테이블이라고 한다.
+	   => EMP 테이블은 DEPT 테이블의 자식 테이블!
+	
+	   부모 테이블의 PK 컬럼 값을 다른 테이블에서 참조 하고 있다.
+	   (DEPT.DEPTNO)         (EMP.DEPTNO)
+		부모                  자식
+	     DEPT.DEPTNO 참조키      그러면 DEPTNO는 외래키이다.
+  	     (REFERENCE KEY)         (FOREIGN KEY)
+
+	   외래키 설정은 "부모 테이블의 기본키 또는 고유키"만 참조
+	   부모 테이블에서 중복된 값을 자식이 참조한다고 했을 때, 값 중복 등의
+	   "모호성"이 발생할 수 있다! => 기본키, 고유키만 참조할 수 있다!!
+
+	  * 이때, 자식 테이블에서 참조하고 있는 부모 테이블의 컬럼은 삭제 할 수 없다.
+	    참조 대상이 없어지면 자식 테이블에서 참조할 대상이 없어진다.
+
+	   "참조 무결성" 위배 !!
+
+	  ※ 하지만, 부모 테이블에서 삭제시.....(DEPT 테이블에서)
+		옵션을 지정하면( on delete cascade)
+		이를 참조하고 있는 자식 테이블의 행을 동시에 삭제 할 수 있다!!!
+
+	(6) 도메인 무결성
+	    도메인 : 컬럼에 있는 값
+
+	    컬럼의 타입을 규정하고, NULL 값 허용 여부 등을 정의한다.
+	    ★ 올바른 데이터가 들어갔는지 확인하는 것
+	    * check 옵션들을 걸어서 범위 외의 값이 들어가는 것을 방지한다.
+
+
+ [정리] PK로 지정된 컬럼의 값을 참조해야 한다 : 개체 무결성
+       두 테이블 간의 일관된 값을 유지해야 한다 : 참조 무결성
+       올바른 데이터가 들어가야 한다 : 도메인 무결성
+---------------------------------------------------------------------------------------
+3. (테이블) 데이터베이스 모델링 (어떻게 테이블을 만드느냐???)
+	: 추상적인 사건(주제)를 DB로 설계하는 과정
+
+   설계과정
+   1) 요구사항 분석하자
+   2) 개념적으로 설계하자
+   3) 논리적으로 설계하자
+   4) 물리적으로 설계하자
+   5) ★ 구현 (sql를 작성)
+
+
+ 1) 데이터베이스 설계 개념
+
+	커피를 주문한다.
+	A손님 민서 3잔이요.
+	B손님 카페라떼 2잔이요.
+	...
+	...
+	(개념적 설계) ERD (Entity Relation Diagram)
+
+	손님 테이블		<-주문하기(동사)-> 	    제품 테이블
+	손님번호 PK           손님번호 FK         제품명 PK
+	제품명               수량               가격
+	수량	           제품명 FK
+	주문하기(동사x)        총금액
+
+◆ 설계 과정
+  1. 요구사항 분석
+	: 사용자로부터 발생하는 데이터를 파악한다.
+	: 요구사항 정의서에서 사용할 entity를 도출하자 (entity가 무엇 : 테이블)
+	: 중복된 명사가 있을 때는 하나만 사용하자( 컬럼 명 == 속성)
+	: 동사적인 형태는 제거하자(작성하다, 주문하다, 먹는다 등등)
+	: 개념이 명확하지 않은 단어는 제거하자
+		(이쁘다, 맛있다, 쓰다....등)
+  2. 개념적 설계
+	: 사용자의 요구사항(분석) 을 이해하기 쉬운 E-R 다이어그램을 작성하는 것
+	: ERD 표기법
+		Entity Relation Diagram
+		1) 직사각형 : 개체(엔티티, 테이블)
+		2) 타원 : 속성(컬럼)
+		3) 타원에 밑줄 : 기본키 속성
+		4) 마름모 : 관계(동사형태)
+		5) 직선 : 개체(entity)와 속성(컬럼)의 연결
+
+	: Primary Key 도출
+		(엔티티)에서 다른 엔티티를 명확하게 구분할 수 있는 고유의 컬럼을 설정하자!
+		ID(PK) -> 회원, 제품번호(PK) -> 제품
+
+
+  3. 논리적 설계
+	: ERP로 그려진 개념적 설계를 바탕으로 실제 DBMS에서 구현할 수 있는 내용으로
+	  Schema(스키마)를 설계하는 단계
+	
+	: 외래키 설정
+		
+	: 관계 (엔티티와 엔티티의 관계)
+		ID는 여러 제품을 구매할 수 있다.
+		1 : 1		1:1로 매칭되는 상황 (고객불편을 남긴 사람하고 1:1로 매칭)
+		1 : n		한 사람이 여러 제품을 구매할 수 있다
+		m : n		여러 회원이 여러개의 물품을 구매할 수 있다
+
+		-> ERD 에 반영하자
+
+
+  4. 물리적 설계
+	: DB에서 사용할 타입과 길이를 지정한다.
+	: (개념적 -> 논리적 그림을 바탕으로) 타입과 길이를 설계하는 것
+	: 회원 테이블
+	  컬럼 이름	자료형		제약조건
+	  ID            문자20자리         기본키
+
+	-> 도식화 하자
+		member
+	       --------
+		id     varchar2(20) primary key
+		email  varchar2(10) not null
+		pw     varchar2(20) not null
+
+  5. 구현
+		create table member(
+			....
+			....
+		);
+
+
+ [실습] emp2 테이블에서 외래키를 추가해 보자
+	--create 할 때 생성했던 외래키(foreign key) 삭제
+	ALTER TABLE EMP2 DROP CONSTRAINT FK_DEPTNO2;	
+
+	--새로운 외래키를 추가해 보자 (FK_DEPTNO3)
+	ALTER TABLE EMP2 ADD CONSTRAINT FK_DEPTNO3
+			FOREIGN KEY(DEPTNO) REFERENCES DEPT(DEPTNO);
+
+------------------------------------------------------------------------------------------------
+[실습]
+1) 요구분석
+	회원인 사람이 생일을 맞아 상품을 골라 결제 한다.
+	그 제품을 원하는 장소(주소)에 배송한다.
+
+2) 개념적 설계 (개념 모델링)
+
+	사람		주문하다	<-	상품
+	-------------------------------------
+	id              주문일            상품#
+	pw              주문#             제품명   --주문#
+	이름             제품#             가격
+	주소              id              수량
+	이메일             주소
+	생일
+	...
+
+3) 논리적 설계 (논리 모델링)
+
+	사람		주문하다	<-	상품
+	-------------------------------------
+	id(PK)           주문일            상품#(PK)
+	pw              주문#(PK)         제품명   --주문#
+	이름             제품#(FK)          가격
+	주소              id(FK)           수량   --주소는 PK(X) 같은 집에 사는 사람이 주문할 수 있음
+	이메일(PK)대체키      주소
+	생일              계좌번호(FK)
+	...		
+
+			↑	
+			은행
+			---------
+			은행명
+			잔액
+			예금주
+			계좌번호(PK)
+			
+
+4) 물리적 설계 (물리 모델링) : 구현할 수 있도록 타입과 길이를 지정하는 것
+
+	Member
+	
+	ID varchar2(20) primary key
+	---------------------------
+	PW varchar2(20)
+	NAME: varchar2(20)
+	ADDRESS : varchar2(30)
+	EMAIL : VARCHAR2(30) 
+	DOB : DATE
+
+
+5) 구현!! SQL 작성
+-----------------------------------------------------------------
+[실습]
+1. 요구사항
+	꽃 테이블과 화분 테이블이 있다.
+	꽃 구매할 때는 해당 꽃과 관련된 "화분"도 같이 구매한다.
+	꽃은 이름과 색깔, 가격이 있고,
+	화분은 제품번호, 색깔, 모양, 꽃 이름을 갖고 있다.
+
+2. 개념적 설계
+	꽃 	-> 	화분
+	이름		제품번호
+	색깔		색깔
+	가격		모양
+			꽃이름...
+
+
+
+3. 논리적 설계
+	꽃	->	화분
+	이름(PK)		ID(PK)
+	색깔		색깔
+	가격		모양
+			이름(FK)
+
+4. 물리적 설계
+	FLOWER				POT
+	
+	NAME VARCHAR2(20)		ID VARCHAR2(20)
+	-----------------------------------------------
+	COLOR VARCHAR2(10)		COLOR VARCHAR2(10)
+	PRICE NUMBER(60)		SHAPE VARCHAR2(20)
+					NAME VARCHAR2(20)
+
+
+5. 구현 (실제로 구현해 보기) scott 계정에서 실행			
+
+	CREATE TABLE FLOWER(
+		NAME VARCHAR2(20),
+		COLOR VARCHAR2(10),
+		PRICE NUMBER(6),
+		CONSTRAINT FLOWER_PK PRIMARY KEY(NAME)
+
+	);
+
+	CREATE TABLE POT(
+		ID VARCHAR2(10),
+		COLOR VARCHAR2(20)
+		SHAPE VARCHAR2(20)
+		NAME VARCHAR2(20)
+		CONSTRAINT POT_PK PRIMARY KEY(ID),
+		CONSTRAINT POT_FK FOREIGN KEY(NAME)
+			REFERENCES FLOWER(NAME)
+	);
+
+-- 데이터 삽입하기
+
+
+
+--꽃과 화분
+
+		CREATE TABLE MEMBER(
+			ID VARCHAR2(20),
+			NAME VARCHAR2(20),
+			ADDRESS VARCHAR2(30),
+			EMAIL VARCHAR2(20),
+			CONSTRAINT PK_MEMBER_ID PRIMARY KEY(ID),
+			CONSTRAINT PK_EMAIL UNIQUE(EMAIL)
+		);
+	
+		CREATE TABLE FLOWER(
+			FNAME VARCHAR2(20),
+			FCOLOR VARCHAR2(10),
+			PRICE NUMBER(10),
+			CONSTRAINT PK_FNAME PRIMARY KEY(FNAME)
+		);
+	
+		CREATE TABLE FPOT(
+			PRODUCT_NUMBER NUMBER(5),
+			PCOLOR VARCHAR2(20),
+			PSHAPE VARCHAR2(10),
+			FNAME VARCHAR2(20),
+			CONSTRAINT FK_PNAME FOREIGN KEY(FNAME) REFERENCES FLOWER(FNAME),
+			CONSTRAINT PK_PRODUCT_NUMBER PRIMARY KEY(PRODUCT_NUMBER) 
+		);
+	
+		CREATE TABLE PURCHASE(
+			ID VARCHAR2(20),
+			ORDER_NUMBER NUMBER(5),
+			PRODUCT_NUMBER NUMBER(5),
+			FNAME VARCHAR2(20),
+			ADDRESS VARCHAR2(30),
+			CONSTRAINT FK_PURCHASE_ID FOREIGN KEY(ID)
+				REFERENCES MEMBER(ID),
+			CONSTRAINT FK_PRODUCT_NUMBER FOREIGN KEY(PRODUCT_NUMBER)
+				REFERENCES FPOT(PRODUCT_NUMBER),
+			CONSTRAINT FK_FNAME FOREIGN KEY(FNAME)
+				REFERENCES FLOWER(FNAME),
+			CONSTRAINT PK_ORDER_NUMBER PRIMARY KEY(ORDER_NUMBER)
+		); 
+	
+
+
+-- 엔티티 관계도에서
+	◇ : 부모 : FLOWER 
+	● : 자식 : POT
+
+-- 값 추가할 때,
+	부모테이블로부터 값을 추가해야 한다. 그리고 자식 테이블에 값을 넣자
+	INSERT FLOWER 테이블에 꽃이름을 넣는다!!! (유일값으로)
+	그러면,
+	FPOT 테이블(자식) 테이블에서 FLOWER 테이블을 참조해서 값을 넣게 된다.
+	(부모에 장미가 없으면, POT에서 장미에 해당하는 값을 넣을 수 없다)
+
+-- 값 삭제할 때,
+	자식에 있는 데이터 삭제 후, 부모에 있는 데이터 삭제해야 한다!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
