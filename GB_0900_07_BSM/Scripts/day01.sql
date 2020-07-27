@@ -1,0 +1,325 @@
+--Ctrl + ] : 새 스크립트 파일 생성
+
+--PLAYER테이블에서 TEAM_ID가 'K02'이거나 'K07'이고
+--포지션은 'MF'인 선수 검색(AND, OR 사용)
+--예약어를 컬럼명 혹은 테이블명으로 사용시 양옆에 큰 따옴표를 붙인다.
+--예) POSITION(X) --> "POSITION" (O)
+SELECT *FROM PLAYER 
+--WHERE (TEAM_ID = 'K02' OR TEAM_ID ='K07') AND "POSITION" = 'MF'; --POSITION이 키워드면 ""로 대체한다
+WHERE "POSITION" = 'MF' AND (TEAM_ID = 'K02' OR TEAM_ID ='K07');
+
+--AND와 OR의 우선순위
+--WHERE 조건절에서 OR보다 AND가 먼저 묶인다.
+--전체화면/하제 : CTRL + M
+
+--TCL
+--PLAYER 테이블에서 TEAM_ID가 'K01'인 선수 이름을 내 이름으로 바꾸기
+UPDATE PLAYER 
+SET PLAYER_NAME  = '백성민'
+WHERE TEAM_ID = 'K01';
+
+
+SELECT * FROM PLAYER WHERE TEAM_ID = 'K01';
+
+--PLAYER 테이블에서 POSITION이 'MF'인 선수 삭제하기
+DELETE FROM PLAYER
+WHERE "POSITION" = 'MF';
+
+SELECT * FROM PLAYER
+WHERE "POSITION" = 'MF';
+
+--PLAYER 테이블에서 HEIGHT가 180이상인 선수 삭제하기
+DELETE FROM PLAYER 
+WHERE HEIGHT >= 180;
+
+SELECT * FROM PLAYER
+WHERE HEIGHT >= 180;
+
+--AS(ALIAS) : 별칭
+--PLAYER 테이블에서 선수 이름을, TEAM 테이블에서 주소를 검색
+--SELECT는 단 한 번만 사용한다.
+
+SELECT T.TEAM_ID, P.PLAYER_NAME "선수 이름", T.ADDRESS 주소 
+FROM PLAYER P , TEAM T;
+
+--STADIUM 테이블에서 ADDRESS를 TEAM 테이블에서 TEL 검색
+SELECT S.ADDRESS AS "경기장 주소", T.TEL
+FROM STADIUM S, TEAM T; --FROM절부터 먼저 하면 나중에 자동 완성이 된다
+
+--CONCATENATION(연결)
+SELECT PLAYER_NAME || '별명은 ' || NICKNAME AS 정보 FROM PLAYER;
+
+--LIKE : 포함된 문자열의 값을 찾음
+-- % : 모든 것
+-- '%A' : A로 끝나는 모든 값
+-- '_A' : A로 끝나고 두 자리인 값
+
+--PLAYER 테이블에서 김씨가 아닌 사람 찾기
+--SELECT * FROM PLAYER WHERE PLAYER_NAME NOT LIKE'김%';
+SELECT * FROM PLAYER WHERE NOT PLAYER_NAME LIKE ('김%');
+
+
+--CASE문
+--CASE WHEN THEN ELSE END
+--CASE WHEN 조건식 THEN TRUE ELSE FLASE END
+
+
+--EMP 테이블에서 SAL 3000이상이면 HIGH, 1000이상이면 MID 다 아니면 LOW
+SELECT ENAME, SAL, 
+CASE
+WHEN SAL >= 3000 THEN 'HIGH' 
+WHEN SAL > = 1000 THEN 'MID'  
+ELSE 'LOW' END AS 클라스  
+FROM EMP;
+
+--중첩 CASE문(Nested CASE)
+--EMP 테이블에서 SAL 2000 이상이면 보너스 1000
+--SAL 1000이상이면 보너스 500
+--다 아니면 0
+SELECT ENAME 사원명, SAL 급여, 
+CASE
+WHEN SAL >= 2000 THEN 1000
+ELSE 
+(
+	CASE
+	WHEN SAL >= 1000 THEN 500
+	ELSE 0
+	END
+) 
+END AS 보너스
+FROM EMP;
+
+--STADIUM 테이블에서 SEAT_COUNT 가 0이상 30000 이하면 'S'
+--30001이상 50000이하면 'M' 다 아니면 'L'
+--중첩 CASE문 사용
+SELECT STADIUM_NAME 경기장, SEAT_COUNT 좌석수,
+CASE 
+WHEN SEAT_COUNT BETWEEN 0 AND 30000 THEN 'S' --SEAT_COUNT > 0 AND SEAT_COUNT < 30000 THEN 'S' 
+ELSE
+(
+	CASE 
+	WHEN SEAT_COUNT BETWEEN 30001 AND 50000 THEN 'M'--SEAT_COUNT > 30001 AND SEAT_COUNT < 50000 THEN 'M'
+	ELSE 'L'
+	END 
+) 
+END AS 규모
+FROM STADIUM;
+
+
+--PLAYER 테이블에서 WEIGHT가 50이상 70이하면 'L'
+--71이상 80이하면 'M' NULL이면 (IS NULL) '미등록' 다 아니면 'H'
+--별칭은 '체격'으로 주기
+
+SELECT PLAYER_NAME 선수, WEIGHT || 'kg' AS 몸무게, --|| 몇 kg인지 연결 시켜준다! 
+CASE
+WHEN WEIGHT BETWEEN 50 AND 70 THEN 'L' --WEIGHT > 50 AND WEIGHT < 70 THEN 'L'
+WHEN WEIGHT BETWEEN 71 AND 80 THEN 'M'
+ELSE 
+(
+	CASE
+	WHEN WEIGHT IS NULL THEN '미등록'
+	ELSE 'H'
+	END
+
+)
+END AS 체격
+FROM PLAYER;
+
+--숫자형 함수(시험 출제) FROM DUAL;
+--절대값
+SELECT ABS(-10) FROM DUAL;
+
+--양의정수(1), 영(0), 음의정수(-1)
+SELECT SIGN(-234), SIGN(0), SIGN(123) FROM DUAL;F --이 값이 양수인지 영인지 음수인지 알 수 있다
+
+--나머지 (% 모듈러스)
+SELECT MOD(10, 8) FROM DUAL;
+
+--값 보다 큰 최근접 정수
+SELECT CEIL(3.14), CEIL(-3.14) FROM DUAL;
+
+--값 보다 작은 최근접 정수
+SELECT FLOOR(3.14), FLOOR(-3.14) FROM DUAL;
+
+--반올림
+SELECT ROUND(3.5513435) FROM DUAL;
+SELECT ROUND(3.5513435, 2) FROM DUAL; --2는 자릿수
+
+--버림
+SELECT TRUNC(3.9) FROM DUAL;
+
+--PLAYER 테이블에서 키는 소수점 둘째자리까지 반올림, 몸무게는 소수점 버림
+SELECT PLAYER_NAME, ROUND(HEIGHT, 2) || 'cm' AS 키, TRUNC(WEIGHT, 0) || 'kg' AS 몸무게 
+FROM PLAYER;
+
+--NVL, NVL2
+--PLAYER 테이블에서 POSITION이 NULL 이면 '미정' 으로 검색하기
+SELECT PLAYER_NAME 선수이름, NVL("POSITION", '미정') 포지션 FROM PLAYER --SELECT뒤에는 값이 나오는 자리다 
+--WHERE "POSITION" IS NULL;
+
+--PLAYER 테이블에서  POSITION이 NULL 이면 '미정', 있으면 '확정' 으로 검색하기
+SELECT PLAYER_NAME 선수이름, NVL2("POSITION", '확정', '미정') "포지션 여부" FROM PLAYER; --DB에서는 함수는 PROCEDURE이다
+
+
+--PLAYER 테이블에서 NATION이 NULL 이 아니면 '등록'
+--NULL 이면 '미등록'으로 변경 후  선수이름, 국가 검색하기
+--별칭은 국가 등록 여부로 주기
+SELECT PLAYER_NAME 선수이름, NVL2(NATION, '등록', '미등록') AS "국가 등록 여부" FROM PLAYER;
+
+
+
+--COALESCE(코얼레스) : 연동하다
+--NULL 이 아니면 1차 선택, NULL 이면 2차 선택, 둘다 NULL이면 NULL
+--PLAYER 테이블에서 NICKNAME, PLAYER_NAME 중 NULL이 아닌 값으로 검색(NULL이면 NULL로 검색)
+
+SELECT PLAYER_NAME, COALESCE(NICKNAME, PLAYER_NAME) AS KNOWN FROM PLAYER;
+
+--PLAYER 테이블에서 NICKNAME이 없으면 '별명 없음' 으로 변경 후 검색
+--코얼레스 사용
+
+SELECT PLAYER_NAME, NICKNAME, COALESCE(NICKNAME, '별명 없음') AS 별명 FROM PLAYER;
+
+
+--집계 함수 (NULL은 포함하지 않는다)
+
+SELECT AVG(HEIGHT), MAX(HEIGHT), MIN(HEIGHT), SUM(HEIGHT) FROM PLAYER;
+
+SELECT * FROM PLAYER WHERE HEIGHT IS NULL;
+
+SELECT COUNT(*) FROM PLAYER;
+
+SELECT * FROM PLAYER;
+
+SELECT COUNT(HEIGHT) FROM PLAYER;
+
+--PLAYER 테이블에서 HEIGHT 개수 검색(NULL 포함해서 COUNT하기)
+SELECT COUNT(NVL(HEIGHT, 0)) AS "총 인원수" FROM PLAYER;
+
+--ORDER BY : 정렬
+--ASC : 오름차순(생략 가능)
+--DESC : 내림차순
+
+--PLAYER 테이블에서 키 순으로 검색(오름 차순)
+SELECT PLAYER_NAME, HEIGHT FROM PLAYER
+WHERE HEIGHT IS NOT NULL 
+ORDER BY HEIGHT DESC;
+
+--PLAYER 테이블에서 키 순, 몸무게 순(오름차순)으로 검색
+--NULL이 아닌 값만 검색
+SELECT PLAYER_NAME, HEIGHT, WEIGHT FROM PLAYER
+WHERE HEIGHT IS NOT NULL AND WEIGHT IS NOT NULL 
+ORDER BY 2, 3 DESC; --2번째 컬럼, 3번째 컬럼 --HEIGHT, WEIGHT DESC;  --HEIGHT가 같으면 WEIGHT로 정렬된다
+--컬럼명 뿐만아니라 결과 컬럼 번호를 작성해도 된다.
+--컬럼 명이 길거나 작성하기 어려울 경우 번호로 작성하여 해결한다.
+----------------------------------------------------------------------------------------------------------------------------
+--GROUP BY : ~별(예 : 포지션 별 평균키)
+
+--GROUP BY 컬럼명
+--HAVING 조건식 (HAVING절은 생략 가능)
+
+--PLAYER 테이블에서 포지션 별 검색
+--1번
+SELECT "POSITION" FROM PLAYER
+GROUP BY "POSITION" 
+HAVING "POSITION" IS NOT NULL; --순서 1)FROM 2)GROUP BY 3)HAVING 4)SELECT 5)ORDER BY
+
+--2번 (WHERE절에서 조건을 처리할 수 있다면 반드시 WHERE절에서 먼저 처리해준다.)
+SELECT "POSITION" FROM PLAYER
+WHERE "POSITION" IS NOT NULL
+GROUP BY "POSITION";
+
+--2번이 1번 보다 더 빠르다
+
+--PLAYER 테이블에서 몸무게가 80이상인 선수들의 평큔 키가 180이상인 포지션 검색
+SELECT "POSITION", ROUND(AVG(HEIGHT), 2) "평균 키", MIN(WEIGHT) "최소 몸무게" 
+FROM PLAYER
+WHERE WEIGHT >= 80 
+GROUP BY "POSITION" --GROUP BY 로 쓴거에 대해서만 검색해야 한다!
+HAVING AVG(HEIGHT) >= 180; --집계함수는 HAVING절에서 써야한다!
+
+--EMPLOYEES 테이블에서 JOB_ID 별로 평균 SALARY가 10000미만인
+--(SALARY 합계, 평균, 최대값, 최소값, JOB_ID별 명수) 검색하기
+--JOB_ID 알파벳 순으로 오름차순 정렬
+
+SELECT JOB_ID, SUM(SALARY), ROUND(AVG(SALARY), 2), MAX(SALARY), MIN(SALARY), COUNT(JOB_ID) 
+FROM EMPLOYEES
+GROUP BY JOB_ID 
+HAVING AVG(SALARY) < 10000
+ORDER BY JOB_ID; 
+
+--SUB QUERY : SQL문 내부에 SQL문 선언
+--FROM절	: IN LINE VIEW
+--SELECT절	: SCALAR
+--WHERE절	: SUB_QUERY
+
+--PLAYER 테이블에서 TEAM_ID가 'K01'인 선수 중에 POSITION이 'GK' 인 선수
+SELECT * FROM (SELECT * FROM PLAYER WHERE TEAM_ID = 'K01')
+WHERE "POSITION" = 'GK';
+
+
+SELECT * FROM PLAYER
+WHERE TEAM_ID = 'K01' AND "POSITION" = 'GK';
+
+--PLAYER 테이블에서 평균키보다 작은 선수 검색
+SELECT * FROM PLAYER WHERE HEIGHT < (SELECT AVG(HEIGHT) FROM PLAYER);
+
+
+--PLAYER 테이블에서 전체 평균 키와 포지션별 평균키 구하기
+SELECT "POSITION", AVG(HEIGHT ) "포지션별 평균 키", 
+(SELECT AVG(HEIGHT) FROM PLAYER) "전체 평균 키"
+FROM PLAYER 
+WHERE "POSITION" IS NOT NULL
+GROUP BY "POSITION"; 
+
+
+--총 4개의 행을 한 개의 행으로 나오도록 CASE문을 사용하여 결과 검색
+SELECT 
+ROUND(AVG(CASE "POSITION" WHEN 'DF' THEN HEIGHT END), 2) AS DF, --수비수의 평균키
+ROUND(AVG(CASE "POSITION" WHEN 'GK' THEN HEIGHT END), 2) AS GK, 
+ROUND(AVG(CASE "POSITION" WHEN 'FW' THEN HEIGHT END), 2) AS FW, 
+ROUND(AVG(CASE "POSITION" WHEN 'MF' THEN HEIGHT END), 2) AS MF, 
+ROUND(AVG(HEIGHT), 2) AS "전체 평균"
+FROM PLAYER;
+
+
+
+--PLAYER 테이블에서 NICKNAME이 NULL인 선수들은 정태민 선수의 닉네임으로 바꾸기
+UPDATE PLAYER 
+SET (NICKNAME) = (SELECT NICKNAME FROM PLAYER WHERE PLAYER_NAME = '정태민')
+WHERE NICKNAME IS NULL;
+
+SELECT * FROM PLAYER;
+
+--PLAYER 테이블에서 NICKNAME이 NULL인 선수들의 이름도 정태민 선수로 바꾸기
+UPDATE PLAYER 
+SET (NICKNAME, PLAYER_NAME ) = (SELECT NICKNAME, PLAYER_NAME FROM PLAYER WHERE PLAYER_NAME = '정태민')
+WHERE NICKNAME IS NULL;
+
+SELECT * FROM PLAYER;
+
+
+--EMPLOYEES 테이블에서 평균 급여보다 낮은 사람들의 급여를 10% 인상하기
+SELECT * FROM EMPLOYEES
+WHERE SALARY < (SELECT AVG(SALARY) FROM EMPLOYEES); 
+
+
+UPDATE EMPLOYEES
+SET SALARY = SALARY * 1.1
+WHERE SALARY < (SELECT AVG(SALARY) FROM EMPLOYEES);
+
+
+SELECT * FROM EMPLOYEES;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
