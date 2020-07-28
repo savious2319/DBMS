@@ -1,8 +1,6 @@
 package vo;
 
 public class UserVO {
-	//alt + shift + a -> GUI 모드가 됨.
-	//거기서 shift + 방향키로 구역 지정
 	private int user_number;
 	private String id;
 	private String pw;
@@ -10,7 +8,10 @@ public class UserVO {
 	private int age;
 	private String phone_number;
 	
-	public UserVO() {;} //작성하지말라!
+	//alt + shift + s
+	//r, alt + a, alt + r
+	
+	public UserVO() {;}
 	
 	public int getUser_number() {
 		return user_number;
@@ -48,6 +49,5 @@ public class UserVO {
 	public void setPhone_number(String phone_number) {
 		this.phone_number = phone_number;
 	}
-	
 	
 }
