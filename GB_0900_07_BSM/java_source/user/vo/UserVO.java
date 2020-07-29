@@ -1,6 +1,8 @@
 package vo;
 
 public class UserVO {
+	//alt + shift + a -> GUI 모드가 됨.
+	//거기서 shift + 방향키로 구역 지정
 	private int user_number;
 	private String id;
 	private String pw;
@@ -8,10 +10,7 @@ public class UserVO {
 	private int age;
 	private String phone_number;
 	
-	//alt + shift + s
-	//r, alt + a, alt + r
-	
-	public UserVO() {;}
+	public UserVO() {;} // {;} -> 작성하지말라라는 뜻
 	
 	public int getUser_number() {
 		return user_number;
@@ -49,5 +48,16 @@ public class UserVO {
 	public void setPhone_number(String phone_number) {
 		this.phone_number = phone_number;
 	}
+	
+	@Override
+	public String toString() {
+		String data = user_number + ", " + id + ", " + pw + ", " + name + ", " +age +", " + phone_number;
+		
+		return data;
+	}
+	
+	
+	
+	
 	
 }
